@@ -3,3 +3,4 @@ ipykernel
 pdfstream
 trackpy
 xpdacq
+area-detector-handlers

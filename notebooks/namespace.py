@@ -1,3 +1,4 @@
+import dask
 import typing
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -6,8 +7,23 @@ import trackpy as tp
 import pandas as pd
 import databroker
 
+
 DB = databroker.catalog["xpd"]
 UID = pd.read_csv("data/uid.csv")
+DASK_SETTING = dask.config.set(scheduler='threads')  # overwrite default with threaded scheduler
+
+
+def process_images_and_track_peaks(images: xr.DataArray, background_image: xr.DataArray, *args, **kwargs) -> pd.DataFrame:
+    """Process a series of image and track peaks. Return a summarized feature dataframe."""
+    dfs = [process_image_and_find_peaks(image, background_image, *args, **kwargs) for image in images]
+    return pd.concat(dfs)
+
+
+def process_image_and_find_peaks(image: xr.DataArray, background_image: xr.DataArray, *args, **kwargs) -> pd.DataFrame:
+    """Process the image and find peak on it."""
+    processed_image = average_subtract_fill_zero(image, background_image).compute()
+    df = my_locate(processed_image, *args, **kwargs)
+    return df
 
 
 def average_subtract_fill_zero(image1: xr.DataArray, image2: xr.DataArray) -> xr.DataArray:
@@ -16,7 +32,8 @@ def average_subtract_fill_zero(image1: xr.DataArray, image2: xr.DataArray) -> xr
     image2 = image2.mean(axis=-3).squeeze()
     image3 = image1.copy()
     image3.values = image1.values - image2.values
-    return image3.where(image3 > 0., np.zeros_like(image3))
+    image3 = image3.where(image3 > 0., np.zeros_like(image3))
+    return image3.compute()
 
 
 def my_locate(frame: xr.DataArray, diameter: int = 15, percentile=90, separation=100, **kwargs) -> pd.DataFrame:
@@ -69,6 +86,3 @@ def my_annotate_image(df, image: xr.DataArray, ax, **kwargs):
     imshow_style.update(kwargs)
     tp.annotate(df, image, ax=ax, imshow_style=imshow_style)
     ax.set_ylim(ax.get_ylim()[::-1])
-
-    
-def 
