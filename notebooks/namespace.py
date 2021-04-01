@@ -6,11 +6,52 @@ import numpy as np
 import trackpy as tp
 import pandas as pd
 import databroker
+from bluesky.callbacks.stream import LiveDispatcher
+import event_model
+from bluesky.callbacks.best_effort import BestEffortCallback
 
 
 DB = databroker.catalog["xpd"]
 UID = pd.read_csv("data/uid.csv")
 DASK_SETTING = dask.config.set(scheduler='threads')  # overwrite default with threaded scheduler
+
+
+class TrackPyStream(LiveDispatcher):
+    """A secondary stream using trackpy.
+
+    It will read the image in event, subtract the background image, fill the negative pixel with zero and find the peaks on the image. At last, it will save the peak info in a data frame.
+    """
+
+    def __init__(self, output_dir: str, image_key: str, background: np.ndarray, **kwargs):
+        self.output_dir = output_dir
+        self.background = background
+        self.image_key = image_key
+        self.kwargs = kwargs
+        self._dfs = []
+        self.summary = pd.DataFrame()
+
+    def start(self, doc, _md=None):
+        self._dfs = []
+        self.summary = pd.DataFrame()
+        return super(TrackPyStream, self).start(doc, _md)
+
+    def event(self, doc, _md=None):
+        frames = doc["data"][image_key]
+        avg_frame = np.mean(frames, axis=0)
+        clean_frame = avg_frame - self.background
+        df = tp.locate(clean_frame, **kwargs)
+        df = df.assign(frame=doc["seq_num"])
+        self._dfs.append(df)
+        self.process_event({'data': doc["data"], 'descriptor': doc["descriptor_id"]})
+
+    def event_page(self, doc, _md=None):
+        for event in event_model.unpack_event_page(doc):
+            self.event(event)
+
+    def stop(self, doc, _md=None):
+        self.summary = pd.concat(self._dfs)
+        self.summary.to_csv("{}-features.csv".format(doc["run_start"]))
+        return super(TrackPyStream, self).stop(doc, _md)
 
 
 def process_images_and_track_peaks(images: xr.DataArray, background_image: xr.DataArray, *args, **kwargs) -> pd.DataFrame:
@@ -47,8 +88,8 @@ def my_locate(frame: xr.DataArray, diameter: int = 15, percentile=90, separation
 def reshape(dataset: xr.Dataset, name: str) -> xr.DataArray:
     """
     Reshape the xarray dataset[name] into two dimensional array. Return a reshape data array with coordinates.
-    
-    Use `shape`, `snaking`, `extents` in the dataset.attrs. The axis axis will be converted to the relative position 
+
+    Use `shape`, `snaking`, `extents` in the dataset.attrs. The axis axis will be converted to the relative position
     to samples so that the coordinate is the negative motor position.
     """
     reshaped = _reshape(dataset[name].values, dataset.attrs["shape"], dataset.attrs["snaking"])
@@ -56,7 +97,7 @@ def reshape(dataset: xr.Dataset, name: str) -> xr.DataArray:
     shape = dataset.attrs["shape"]
     coords = [-np.linspace(*extent, num) for extent, num in zip(extents, shape)]
     return xr.DataArray(reshaped, coords={"y": coords[0], "x": coords[1]}, dims=["y", "x"])
-    
+
 
 def _reshape(arr: np.ndarray, shape: typing.List[int], snaking: typing.List[bool]) -> np.ndarray:
     reshaped = arr.reshape(shape)
