@@ -11,7 +11,8 @@ def reshape(dataset: xr.Dataset, name: str) -> xr.DataArray:
     """
     Reshape the xarray dataset[name] into two dimensional array. Return a reshape data array with coordinates.
 
-    Use `shape`, `snaking`, `extents` in the dataset.attrs. The axis axis will be converted to the relative position to samples so that the coordinate is the negative motor position.
+    Use `shape`, `snaking`, `extents` in the dataset.attrs. The axis axis will be converted to the relative
+    position to samples so that the coordinate is the negative motor position.
     """
     reshaped = _reshape(dataset[name].values, dataset.attrs["shape"], dataset.attrs["snaking"])
     extents = dataset.attrs["extents"]
@@ -30,7 +31,8 @@ def _reshape(arr: np.ndarray, shape: typing.List[int], snaking: typing.List[bool
 
 
 def plot_real_aspect(xarr: xr.DataArray, *args, alpha: float = 1.6, **kwargs) -> xr.plot.FacetGrid:
-    """Visualize two dimensional arr as a color map. The color ranges from median - alpha * std to median + alpha * std."""
+    """Visualize two dimensional arr as a color map. The color ranges from median - alpha * std to median +
+    alpha * std."""
     facet = xarr.plot(*args, **kwargs, **get_vlim(xarr, alpha))
     facet.axes.set_aspect(1, adjustable="box")
     return facet
