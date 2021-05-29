@@ -38,7 +38,7 @@ class ImageProcessor(LiveDispatcher):
         result[result < 0.] = 0.
         new_data = {k: v for k, v in doc["data"].items() if k != self.data_key}
         new_data[self.data_key] = result
-        self.process_event({'data': new_data, 'descriptor': doc["descriptor_id"]})
+        self.process_event({'data': new_data, 'descriptor': doc["descriptor"]})
         return super(LiveDispatcher, self).event(doc)
 
     def get_mean_frame(self, doc):
@@ -68,10 +68,11 @@ class PeakTracker(CallbackBase):
         output_dir :
             The path to the directory to export cif files of the peak tracking results.
         config :
-            The kwargs for the `trackpy.locate`.
+            The kwargs for the `trackpy.locate`. The "diameter" is required. If not provided, use (3, 3).
         """
         if not config:
             config = {}
+        config.setdefault("diameter", (3, 3))
         super(PeakTracker, self).__init__()
         self.data_key = data_key
         self.output_dir = pathlib.Path(output_dir)

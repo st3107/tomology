@@ -43,8 +43,12 @@ def get_vlim(xarr: xr.DataArray, alpha: float) -> dict:
     return {"vmin": max(0., mean - alpha * std), "vmax": mean + alpha * std}
 
 
-def annotate_peaks(df: pd.DataFrame, image: xr.DataArray, ax: plt.Axes, alpha: float = 1.6, **kwargs) -> None:
+def annotate_peaks(df: pd.DataFrame, image: xr.DataArray, ax: plt.Axes = None, alpha: float = 1.6,
+                   **kwargs) -> None:
     """A function wrapping the tp.annotate. Use different default setting."""
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
     imshow_style = dict(**get_vlim(image, alpha=alpha), cmap="viridis")
     imshow_style.update(kwargs)
     tp.annotate(df, image, ax=ax, imshow_style=imshow_style)
