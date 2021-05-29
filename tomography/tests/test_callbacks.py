@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
-import tomography.callbacks as cbs
-from pdfstream.callbacks.composer import gen_stream
 import pandas as pd
+from pdfstream.callbacks.composer import gen_stream
+
+import tomography.callbacks as cbs
 
 
 def test_ImageProcessor():

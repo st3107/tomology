@@ -1,8 +1,9 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import xarray as xr
+
 import tomography.utils as utils
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 def test_reshape():
