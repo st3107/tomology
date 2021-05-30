@@ -9,7 +9,6 @@ from pkg_resources import resource_filename
 
 import tomography.callbacks as cbs
 
-tp.quiet()
 
 def print_doc(name, doc):
     print(name, "\n", pformat(doc))
@@ -36,6 +35,7 @@ def test_ImageProcessor():
 
 def test_PeakTracker(tmpdir):
     """Check that PeakTrack and TrackLinker works without errors."""
+    tp.quiet()
     # make images
     image_file = resource_filename("tomography", "data/image.png")
     image = plt.imread(image_file)

@@ -4,10 +4,17 @@ from collections import ChainMap
 import event_model as em
 import numpy as np
 import pandas as pd
-import trackpy as tp
 from bluesky.callbacks.stream import LiveDispatcher
 from databroker.core import BlueskyEventStream
 from databroker.v2 import Broker
+from trackpy import link, locate
+
+
+def subtract_images(minuend: np.ndarray, subtrahend: np.ndarray) -> np.ndarray:
+    """Subtract the image and fill zero in negative pixles."""
+    res = np.subtract(minuend, subtrahend)
+    res[res < 0.] = 0.
+    return res
 
 
 class ImageProcessor(LiveDispatcher):
@@ -41,8 +48,7 @@ class ImageProcessor(LiveDispatcher):
 
     def event(self, doc, **kwargs):
         minuend = self.get_mean_frame(doc)
-        result = np.subtract(minuend, self.subtrahend)
-        result[result < 0.] = 0.
+        result = subtract_images(minuend, self.subtrahend)
         new_data = {k: v for k, v in doc["data"].items() if k != self.data_key}
         new_data[self.data_key] = result.tolist()
         self.process_event({'data': new_data, 'descriptor': doc["descriptor"]})
@@ -91,7 +97,7 @@ class PeakTracker(LiveDispatcher):
 
     def event(self, doc, **kwargs):
         image = doc["data"][self.data_key]
-        df = tp.locate(image, **self.config)
+        df = locate(image, **self.config)
         df = df.assign(frame=doc["seq_num"])
         for data in df.to_dict("records"):
             self.process_event({"data": data, "descriptor": doc["descriptor"]})
@@ -138,14 +144,9 @@ class TrackLinker(LiveDispatcher):
         return
 
     def stop(self, doc, _md=None):
-        if self.db is not None:
-            df = self.link(self.db[doc["run_start"]].primary)
-            descriptor = next(iter(self.raw_descriptors.keys()))
-            for data in df.to_dict("records"):
-                self.process_event({"data": data, "descriptor": descriptor})
+        features = get_dataframe(self.db[doc["run_start"]].primary)
+        df = link(features, **self.config)
+        descriptor = next(iter(self.raw_descriptors.keys()))
+        for data in df.to_dict("records"):
+            self.process_event({"data": data, "descriptor": descriptor})
         super(TrackLinker, self).stop(doc, _md=None)
-
-    def link(self, stream: BlueskyEventStream) -> pd.DataFrame:
-        """This is a wrapper of `trackpy.link`. It takes in BlueskyEventStream."""
-        features = get_dataframe(stream, drop_time=True)
-        return tp.link(features, **self.config)
