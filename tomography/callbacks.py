@@ -1,12 +1,12 @@
-import pathlib
 import typing
+from collections import ChainMap
 
 import event_model as em
 import numpy as np
 import pandas as pd
 import trackpy as tp
-from bluesky.callbacks.core import CallbackBase
 from bluesky.callbacks.stream import LiveDispatcher
+from databroker.core import BlueskyEventStream
 
 
 class ImageProcessor(LiveDispatcher):
@@ -28,6 +28,12 @@ class ImageProcessor(LiveDispatcher):
         self.data_key = data_key
         self.subtrahend = np.asarray(subtrahend) * scale
 
+    def start(self, doc, _md=None):
+        if _md is None:
+            _md = {}
+        _md = ChainMap({"analysis_stage": ImageProcessor.__name__}, _md)
+        super(ImageProcessor, self).start(doc, _md=_md)
+
     def event_page(self, doc):
         for event_doc in em.unpack_event_page(doc):
             self.event(event_doc)
@@ -39,7 +45,6 @@ class ImageProcessor(LiveDispatcher):
         new_data = {k: v for k, v in doc["data"].items() if k != self.data_key}
         new_data[self.data_key] = result.tolist()
         self.process_event({'data': new_data, 'descriptor': doc["descriptor"]})
-        return super(LiveDispatcher, self).event(doc)
 
     def get_mean_frame(self, doc) -> np.ndarray:
         frames = np.asarray(doc["data"][self.data_key])
@@ -55,49 +60,45 @@ class ImageProcessor(LiveDispatcher):
         return mean_frame
 
 
-class PeakTracker(CallbackBase):
+class PeakTracker(LiveDispatcher):
     """Track the peaks on a series of images and summarize their position and intensity in a dataframe."""
 
-    def __init__(self, data_key: str, output_dir: str, config: typing.Dict[str, typing.Any] = None):
+    def __init__(self, data_key: str, diameter: typing.Union[int, tuple], **kwargs):
         """Initiate the instance.
 
         Parameters
         ----------
         data_key :
             The key of the data to use.
-        output_dir :
-            The path to the directory to export cif files of the peak tracking results.
-        config :
-            The kwargs for the `trackpy.locate`. The "diameter" is required. If not provided, use (3, 3).
+        diameter :
+            The pixel size of the peak.
+        kwargs :
+            The other kwargs for the `trackpy.locate`.
         """
-        if not config:
-            config = {}
-        config.setdefault("diameter", (3, 3))
+        kwargs["diameter"] = diameter
         super(PeakTracker, self).__init__()
         self.data_key = data_key
-        self.output_dir = pathlib.Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.config = config
-        self._cache = []
+        self.config = kwargs
 
-    def start(self, doc):
-        self._cache = []
-        return super(PeakTracker, self).start(doc)
+    def start(self, doc, _md=None):
+        if _md is None:
+            _md = {}
+        _md = ChainMap({"analysis_stage": PeakTracker.__name__}, _md)
+        super(PeakTracker, self).start(doc, _md=_md)
 
     def event_page(self, doc):
         for event_doc in em.unpack_event_page(doc):
             self.event(event_doc)
-        return super(PeakTracker, self).event_page(doc)
 
-    def event(self, doc):
+    def event(self, doc, **kwargs):
         image = doc["data"][self.data_key]
         df = tp.locate(image, **self.config)
         df = df.assign(frame=doc["seq_num"])
-        self._cache.append(df)
-        return super(PeakTracker, self).event(doc)
+        for data in df.to_dict("records"):
+            self.process_event({"data": data, "descriptor": doc["descriptor"]})
 
-    def stop(self, doc):
-        filename = str(self.output_dir.joinpath("{}_features.csv".format(doc["run_start"])))
-        df = pd.concat(self._cache)
-        df.to_csv(filename)
-        return super(PeakTracker, self).stop(doc)
+
+def get_dataframe(stream: BlueskyEventStream, drop_time: bool = True) -> pd.DataFrame:
+    """Get the dataframe from the stream. Drop the time column."""
+    df: pd.DataFrame = stream.read().to_dataframe()
+    return df.reset_index(drop=drop_time)

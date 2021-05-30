@@ -1,8 +1,16 @@
+from pprint import pformat
+
+import databroker
+import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from pdfstream.callbacks.composer import gen_stream
+from pkg_resources import resource_filename
 
 import tomography.callbacks as cbs
+
+
+def print_doc(name, doc):
+    print(name, "\n", pformat(doc))
 
 
 def test_ImageProcessor():
@@ -27,13 +35,18 @@ def test_ImageProcessor():
 def test_PeakTracker(tmpdir):
     """Check that PeakTrack works without errors."""
     # make images
-    images = [np.zeros((16, 16), dtype=int) for _ in range(3)]
+    image_file = resource_filename("tomography", "data/image.png")
+    image = plt.imread(image_file)
+    images = [image] * 3
+    # check if db friendly
+    db = databroker.v2.temp()
     # test
     data_key = "pe1_image"
-    pt = cbs.PeakTracker(data_key=data_key, output_dir=str(tmpdir))
+    pt = cbs.PeakTracker(data_key=data_key, diameter=(11, 11))
+    pt.subscribe(db.v1.insert)
     data = [{data_key: image} for image in images]
     for name, doc in gen_stream(data, {}):
         pt(name, doc)
-    # print
-    df = pd.read_csv(tmpdir.listdir()[0])
+    # check output
+    df = cbs.get_dataframe(db[-1].primary)
     print(df.to_string())
