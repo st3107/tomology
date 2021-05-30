@@ -12,7 +12,9 @@ def test_ImageProcessor():
     def verify(_name, _doc):
         if _name != "event":
             return
-        assert np.array_equal(_doc["data"][data_key], np.zeros((3, 3)))
+        data = _doc["data"][data_key]
+        assert isinstance(data, list)
+        assert np.array_equal(np.asarray(data), np.zeros((3, 3)))
 
     ip = cbs.ImageProcessor(data_key=data_key, subtrahend=np.ones((3, 3)))
     ip.subscribe(verify, name="event")

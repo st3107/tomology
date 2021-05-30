@@ -37,11 +37,11 @@ class ImageProcessor(LiveDispatcher):
         result = np.subtract(minuend, self.subtrahend)
         result[result < 0.] = 0.
         new_data = {k: v for k, v in doc["data"].items() if k != self.data_key}
-        new_data[self.data_key] = result
+        new_data[self.data_key] = result.tolist()
         self.process_event({'data': new_data, 'descriptor': doc["descriptor"]})
         return super(LiveDispatcher, self).event(doc)
 
-    def get_mean_frame(self, doc):
+    def get_mean_frame(self, doc) -> np.ndarray:
         frames = np.asarray(doc["data"][self.data_key])
         n = np.ndim(frames)
         if n < 2:
