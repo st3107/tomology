@@ -3,11 +3,13 @@ from pprint import pformat
 import databroker
 import matplotlib.pyplot as plt
 import numpy as np
+import trackpy as tp
 from pdfstream.callbacks.composer import gen_stream
 from pkg_resources import resource_filename
 
 import tomography.callbacks as cbs
 
+tp.quiet()
 
 def print_doc(name, doc):
     print(name, "\n", pformat(doc))
@@ -33,20 +35,26 @@ def test_ImageProcessor():
 
 
 def test_PeakTracker(tmpdir):
-    """Check that PeakTrack works without errors."""
+    """Check that PeakTrack and TrackLinker works without errors."""
     # make images
     image_file = resource_filename("tomography", "data/image.png")
     image = plt.imread(image_file)
     images = [image] * 3
     # check if db friendly
     db = databroker.v2.temp()
-    # test
+    # check features
     data_key = "pe1_image"
     pt = cbs.PeakTracker(data_key=data_key, diameter=(11, 11))
     pt.subscribe(db.v1.insert)
     data = [{data_key: image} for image in images]
     for name, doc in gen_stream(data, {}):
         pt(name, doc)
-    # check output
+    df = cbs.get_dataframe(db[-1].primary)
+    print(df.to_string())
+    # check trajectories
+    tl = cbs.TrackLinker(db=db, search_range=3)
+    tl.subscribe(db.v1.insert)
+    for name, doc in db[-1].documents(fill="yes"):
+        tl(name, doc)
     df = cbs.get_dataframe(db[-1].primary)
     print(df.to_string())

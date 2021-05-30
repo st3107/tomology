@@ -7,6 +7,7 @@ import pandas as pd
 import trackpy as tp
 from bluesky.callbacks.stream import LiveDispatcher
 from databroker.core import BlueskyEventStream
+from databroker.v2 import Broker
 
 
 class ImageProcessor(LiveDispatcher):
@@ -81,9 +82,7 @@ class PeakTracker(LiveDispatcher):
         self.config = kwargs
 
     def start(self, doc, _md=None):
-        if _md is None:
-            _md = {}
-        _md = ChainMap({"analysis_stage": PeakTracker.__name__}, _md)
+        _md = {"analysis_stage": PeakTracker.__name__}
         super(PeakTracker, self).start(doc, _md=_md)
 
     def event_page(self, doc):
@@ -102,3 +101,51 @@ def get_dataframe(stream: BlueskyEventStream, drop_time: bool = True) -> pd.Data
     """Get the dataframe from the stream. Drop the time column."""
     df: pd.DataFrame = stream.read().to_dataframe()
     return df.reset_index(drop=drop_time)
+
+
+class TrackLinker(LiveDispatcher):
+    """Track the peaks in frame and link them in trajectories.
+
+    When a stop is received, the data will be pulled from the databroker and processed. Then, the dataframe will
+    be emitted row by row.
+    """
+
+    def __init__(self, *, db: Broker = None, search_range: typing.Union[float, tuple], **kwargs):
+        """Create the instance.
+
+        Parameters
+        ----------
+        db :
+            The databroker. If None, this callback does nothing.
+        search_range :
+            The search_range in `trackpy.link`.
+        kwargs :
+            Other kwargs in `trackpy.link`.
+        """
+        super(TrackLinker, self).__init__()
+        kwargs["search_range"] = search_range
+        self.config = kwargs
+        self.db = db
+
+    def start(self, doc, _md=None):
+        _md = {"analysis_stage": TrackLinker.__name__}
+        super(TrackLinker, self).start(doc, _md=_md)
+
+    def event_page(self, doc):
+        return
+
+    def event(self, doc, **kwargs):
+        return
+
+    def stop(self, doc, _md=None):
+        if self.db is not None:
+            df = self.link(self.db[doc["run_start"]].primary)
+            descriptor = next(iter(self.raw_descriptors.keys()))
+            for data in df.to_dict("records"):
+                self.process_event({"data": data, "descriptor": descriptor})
+        super(TrackLinker, self).stop(doc, _md=None)
+
+    def link(self, stream: BlueskyEventStream) -> pd.DataFrame:
+        """This is a wrapper of `trackpy.link`. It takes in BlueskyEventStream."""
+        features = get_dataframe(stream, drop_time=True)
+        return tp.link(features, **self.config)
