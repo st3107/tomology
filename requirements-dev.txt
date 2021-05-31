@@ -4,5 +4,3 @@ codecov
 coverage
 flake8
 pytest
-ipykernel
-pdfstream
