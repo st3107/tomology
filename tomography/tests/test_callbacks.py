@@ -3,6 +3,7 @@ from pprint import pformat
 import databroker
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import trackpy as tp
 from pdfstream.callbacks.composer import gen_stream
 from pkg_resources import resource_filename
@@ -68,3 +69,16 @@ def test_PeakTracker(tmpdir):
         tl(name, doc)
     df = cbs.get_dataframe(db[-1])
     print(df.to_string())
+
+
+def test_DataFrameDumper():
+    """Test DataFrameDumper."""
+    db = databroker.v1.temp()
+    dfd = cbs.DataFrameDumper(db)
+    data = [1, 2, 3]
+    df = pd.DataFrame({"a": [1, 2, 3]})
+    metadata = {"key": "a"}
+    dfd.dump_df(df, metadata)
+    run = db[-1]
+    assert run.start["key"] == metadata["key"]
+    assert list(run.data("a")) == data

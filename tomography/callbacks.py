@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from bluesky.callbacks.stream import LiveDispatcher
 from databroker import Broker, Header
+from pdfstream.callbacks.composer import gen_stream
 from trackpy import link, locate
 
 
@@ -176,3 +177,20 @@ class TrackLinker(LiveDispatcher):
         for data in df.to_dict("records"):
             self.process_event({"data": data, "descriptor": descriptor})
         super(TrackLinker, self).stop(doc, _md=None)
+
+
+class DataFrameDumper(object):
+    """Dump the dataframe to the database using databroker."""
+
+    def __init__(self, db: Broker):
+        """Create an instance"""
+        super(DataFrameDumper, self).__init__()
+        self._db = db
+
+    def dump_df(self, df: pd.DataFrame, metadata: dict = None):
+        """Dump the data frame into the database with the metadata."""
+        if not metadata:
+            metadata = {}
+        data = df.to_dict("records")
+        for name, doc in gen_stream(data, metadata):
+            self._db.insert(name, doc)
