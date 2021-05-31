@@ -41,20 +41,20 @@ def test_PeakTracker(tmpdir):
     image = plt.imread(image_file)
     images = [image] * 3
     # check if db friendly
-    db = databroker.v2.temp()
+    db = databroker.v1.temp()
     # check features
     data_key = "pe1_image"
     pt = cbs.PeakTracker(data_key=data_key, diameter=(11, 11))
-    pt.subscribe(db.v1.insert)
+    pt.subscribe(db.insert)
     data = [{data_key: image} for image in images]
     for name, doc in gen_stream(data, {}):
         pt(name, doc)
-    df = cbs.get_dataframe(db[-1].primary)
+    df = cbs.get_dataframe(db[-1])
     print(df.to_string())
     # check trajectories
     tl = cbs.TrackLinker(db=db, search_range=3)
-    tl.subscribe(db.v1.insert)
+    tl.subscribe(db.insert)
     for name, doc in db[-1].documents(fill="yes"):
         tl(name, doc)
-    df = cbs.get_dataframe(db[-1].primary)
+    df = cbs.get_dataframe(db[-1])
     print(df.to_string())

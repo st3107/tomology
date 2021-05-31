@@ -5,8 +5,7 @@ import event_model as em
 import numpy as np
 import pandas as pd
 from bluesky.callbacks.stream import LiveDispatcher
-from databroker.core import BlueskyEventStream
-from databroker.v2 import Broker
+from databroker import Broker, Header
 from trackpy import link, locate
 
 
@@ -103,9 +102,9 @@ class PeakTracker(LiveDispatcher):
             self.process_event({"data": data, "descriptor": doc["descriptor"]})
 
 
-def get_dataframe(stream: BlueskyEventStream, drop_time: bool = True) -> pd.DataFrame:
+def get_dataframe(run: Header, drop_time: bool = True) -> pd.DataFrame:
     """Get the dataframe from the stream. Drop the time column."""
-    df: pd.DataFrame = stream.read().to_dataframe()
+    df: pd.DataFrame = run.xarray().to_dataframe()
     return df.reset_index(drop=drop_time)
 
 
@@ -144,7 +143,7 @@ class TrackLinker(LiveDispatcher):
         return
 
     def stop(self, doc, _md=None):
-        features = get_dataframe(self.db[doc["run_start"]].primary)
+        features = get_dataframe(self.db[doc["run_start"]])
         df = link(features, **self.config)
         descriptor = next(iter(self.raw_descriptors.keys()))
         for data in df.to_dict("records"):
