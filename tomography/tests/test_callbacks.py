@@ -33,6 +33,16 @@ def test_ImageProcessor():
         ip(name, doc)
 
 
+def test_gen_processed_images():
+    """Test gen_processed_images."""
+    images1 = (np.ones((2, 3, 3)) for _ in range(3))
+    subtrahend = np.ones((3, 3))
+    subtrahend[0, 0] = 2
+    images2 = cbs.gen_processed_images(images1, subtrahend=subtrahend)
+    for image in images2:
+        assert np.array_equal(image, np.zeros((3, 3)))
+
+
 def test_PeakTracker(tmpdir):
     """Check that PeakTrack and TrackLinker works without errors."""
     tp.quiet()

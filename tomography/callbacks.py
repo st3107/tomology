@@ -9,17 +9,64 @@ from databroker import Broker, Header
 from trackpy import link, locate
 
 
-def subtract_images(minuend: np.ndarray, subtrahend: np.ndarray) -> np.ndarray:
-    """Subtract the image and fill zero in negative pixles."""
-    res = np.subtract(minuend, subtrahend)
-    res[res < 0.] = 0.
-    return res
+def gen_processed_images(images: typing.Iterable[typing.Union[list, np.ndarray]],
+                         subtrahend: typing.Union[list, np.ndarray]) -> typing.Generator[np.ndarray, None, None]:
+    """Generate processed image from a series of images.
+
+    The process procedure is (1) turn ot numpy array, (2) average the frames to a two dimensional image, (3) subtract the image and fill zero in negative pixels.
+
+    Parameters
+    ----------
+    images :
+        A iterable of images. The dimensions of each image is no less than 2.
+    subtrahend :
+        The subtrahend image. The dimensions of each image is no less than 2.
+
+    Yields
+    ------
+    processed_image :
+        A two dimensional image.
+    """
+    subtrahend = np.asarray(subtrahend)
+    subtrahend = get_mean_frame(subtrahend)
+    for image in images:
+        image = np.asarray(image)
+        image = get_mean_frame(image)
+        image = subtract_image(image, subtrahend)
+        yield image
+
+
+def get_mean_frame(frames: np.ndarray) -> np.ndarray:
+    """Average the frames to a two dimensional image."""
+    n = np.ndim(frames)
+    if n < 2:
+        raise ValueError("The dimension of {} < 2.".format(self.data_key))
+    elif n == 2:
+        mean_frame = np.copy(frames)
+    elif n == 3:
+        mean_frame = np.mean(frames, axis=0)
+    else:
+        mean_frame = np.mean(frames, axis=tuple((i for i in range(n - 2))))
+    return mean_frame
+
+
+def subtract_image(minuend: np.ndarray, subtrahend: np.ndarray) -> np.ndarray:
+    """Subtract the image and fill zero in negative pixels."""
+    ans = np.zeros_like(minuend)
+    np.subtract(minuend, subtrahend, out=ans, where=ans > 0)
+    return ans
+
+
+def get_dataframe(run: Header, drop_time: bool = True) -> pd.DataFrame:
+    """Get the dataframe from the stream. Drop the time column."""
+    df: pd.DataFrame = run.xarray().to_dataframe()
+    return df.reset_index(drop=drop_time)
 
 
 class ImageProcessor(LiveDispatcher):
     """A callback to average frames of images, subtract it by another image, and emit the document."""
 
-    def __init__(self, data_key: str, subtrahend: np.ndarray, scale: float = 1.):
+    def __init__(self, data_key: str, subtrahend: np.ndarray):
         """Initiate the instance.
 
         Parameters
@@ -28,12 +75,10 @@ class ImageProcessor(LiveDispatcher):
             The key of the data to use.
         subtrahend :
             The 2d image as a subtrahend.
-        scale :
-            The scale factor of the subtrahend.
         """
         super(ImageProcessor, self).__init__()
         self.data_key = data_key
-        self.subtrahend = np.asarray(subtrahend) * scale
+        self.subtrahend = np.asarray(subtrahend)
 
     def start(self, doc, _md=None):
         if _md is None:
@@ -46,24 +91,12 @@ class ImageProcessor(LiveDispatcher):
             self.event(event_doc)
 
     def event(self, doc, **kwargs):
-        minuend = self.get_mean_frame(doc)
-        result = subtract_images(minuend, self.subtrahend)
+        frames = np.asarray(doc["data"][self.data_key])
+        minuend = get_mean_frame(frames)
+        result = subtract_image(minuend, self.subtrahend)
         new_data = {k: v for k, v in doc["data"].items() if k != self.data_key}
         new_data[self.data_key] = result.tolist()
         self.process_event({'data': new_data, 'descriptor': doc["descriptor"]})
-
-    def get_mean_frame(self, doc) -> np.ndarray:
-        frames = np.asarray(doc["data"][self.data_key])
-        n = np.ndim(frames)
-        if n < 2:
-            raise ValueError("The dimension of {} < 2.".format(self.data_key))
-        elif n == 2:
-            mean_frame = frames
-        elif n == 3:
-            mean_frame = np.mean(frames, axis=0)
-        else:
-            mean_frame = np.mean(frames, axis=tuple((i for i in range(n - 2))))
-        return mean_frame
 
 
 class PeakTracker(LiveDispatcher):
@@ -100,12 +133,6 @@ class PeakTracker(LiveDispatcher):
         df = df.assign(frame=doc["seq_num"])
         for data in df.to_dict("records"):
             self.process_event({"data": data, "descriptor": doc["descriptor"]})
-
-
-def get_dataframe(run: Header, drop_time: bool = True) -> pd.DataFrame:
-    """Get the dataframe from the stream. Drop the time column."""
-    df: pd.DataFrame = run.xarray().to_dataframe()
-    return df.reset_index(drop=drop_time)
 
 
 class TrackLinker(LiveDispatcher):
