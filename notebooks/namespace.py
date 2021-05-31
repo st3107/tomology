@@ -1,14 +1,8 @@
-import tomology.utils as utils
-import tomology.callbacks as cbs
-import typing
-import xarray as xr
-import matplotlib.pyplot as plt
-import numpy as np
-import trackpy as tp
+import dask
 import pandas as pd
-import databroker
-from bluesky.callbacks.best_effort import BestEffortCallback
+from databroker import Broker
 
-DB = databroker.catalog["xpd"]
+DB = Broker.named("xpd")
 UID = pd.read_csv("data/uid.csv")
-
+dask.config.set(scheduler='threads')
+DB2 = Broker.named("analysis")
