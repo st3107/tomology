@@ -4,7 +4,4 @@ codecov
 coverage
 flake8
 pytest
-# There are dependencies for the research
-xpdacq
-area-detector-handlers
-pdfstream
+ipykernel
