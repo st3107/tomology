@@ -58,10 +58,9 @@ def subtract_image(minuend: np.ndarray, subtrahend: np.ndarray) -> np.ndarray:
     return ans
 
 
-def get_dataframe(run: Header, drop_time: bool = True) -> pd.DataFrame:
+def get_dataframe(run: Header) -> pd.DataFrame:
     """Get the dataframe from the stream. Drop the time column."""
-    df: pd.DataFrame = run.xarray().to_dataframe()
-    return df.reset_index(drop=drop_time)
+    return run.table().drop(columns=["time"])
 
 
 class ImageProcessor(LiveDispatcher):
