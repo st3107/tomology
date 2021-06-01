@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import trackpy as tp
 import xarray as xr
+from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 
 
 def reshape(dataset: xr.Dataset, name: str, inverted: bool = True) -> xr.DataArray:
@@ -54,7 +55,8 @@ def annotate_peaks(df: pd.DataFrame, image: xr.DataArray, ax: plt.Axes = None, a
     ax.set_ylim(*ax.get_ylim()[::-1])
 
 
-def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True) -> xr.Dataset:
+def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True,
+                 excluded: set = frozenset(["frame"])) -> xr.Dataset:
     """Create the dataset of the maps of grains.
 
     The dataset is like below.
@@ -82,6 +84,8 @@ def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True) 
         The starting number of the frame.
     inverted :
         If True, invert all axis so that maps are viewed in sample frame.
+    excluded :
+        The excluded the columns in dataframe.
 
     Returns
     -------
@@ -104,7 +108,8 @@ def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True) 
     # get additional data
     mean_df = groups.mean()
     for key, lst in mean_df.to_dict("list").items():
-        all_data[key] = (["grain"], lst)
+        if key not in excluded:
+            all_data[key] = (["grain"], lst)
     # add grain to coords
     coords["grain"] = names
     return xr.Dataset(all_data, coords=coords)
@@ -157,3 +162,8 @@ def set_real_aspect(axes: typing.Union[plt.Axes, typing.Iterable[plt.Axes]]) -> 
     else:
         axes.set_aspect(aspect="equal", adjustable="box")
     return
+
+
+def pixel_to_Q(d1: np.ndarray, d2: np.ndarray, ai: AzimuthalIntegrator) -> np.ndarray:
+    """Map pixel position (d1, d2) to Q in nm-1."""
+    return ai.qCornerFunct(d1, d2)
