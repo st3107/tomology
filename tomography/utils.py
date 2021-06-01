@@ -89,7 +89,7 @@ def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True) 
         A dataset created.
     """
     all_data = dict()
-    groups = df.groupby("particle")
+    groups = df.groupby("particle", sort=False)
     # get a stack of maps
     data_list = []
     names = []
