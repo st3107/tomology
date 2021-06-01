@@ -1,5 +1,6 @@
 import typing
 
+import dask.array
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -55,7 +56,7 @@ def annotate_peaks(df: pd.DataFrame, image: xr.DataArray, ax: plt.Axes = None, a
     ax.set_ylim(*ax.get_ylim()[::-1])
 
 
-def create_atlas(df: pd.DataFrame, start_frame: int = 0, inverted: bool = True,
+def create_atlas(df: pd.DataFrame, start_frame: int = 1, inverted: bool = True,
                  excluded: set = frozenset(["frame"])) -> xr.Dataset:
     """Create the dataset of the maps of grains.
 
@@ -152,6 +153,12 @@ def plot_grain_maps(atlas: xr.Dataset, **kwargs) -> xr.plot.FacetGrid:
     kwargs.setdefault("col", "grain")
     facet = atlas["maps"].plot(**kwargs)
     set_real_aspect(facet.axes)
+    # automatically adjust size
+    ratio = facet.axes.flatten()[0].get_data_ratio()
+    num = atlas["maps"].shape[0]
+    col_wrap = kwargs.get("col_wrap", 1)
+    facet.fig.set_size_inches((1.2 * num / col_wrap, 1.2 * ratio * col_wrap))
+    facet.set_titles("{value}")
     return facet
 
 
@@ -178,3 +185,53 @@ def assign_Q_to_atlas(atlas: xr.Dataset, ai: AzimuthalIntegrator) -> xr.Dataset:
     q = pixel_to_Q(atlas["y"].values, atlas["x"].values, ai)
     dims = atlas["y"].dims
     return atlas.assign({"Q": (dims, q)})
+
+
+def create_atlas_dask(windows: pd.DataFrame, frames: dask.array.Array) -> typing.List[dask.array.Array]:
+    """Create a list of tasks to compute the grain maps. Each task is one grain map.
+
+    The dataframe has columns "x", "y", "dx", "dy". Each row is a window on the frames. The window is
+    (x - dx, x + dx) in horizontal and (y - dy, y + dy) in vertical. The return is a list of dask arrays.
+
+    Parameters
+    ----------
+    windows :
+        The dataframe with columns "x", "y", "dx", "dy".
+    frames :
+        The array of dimensions (frame, count, y, x).
+
+    Returns
+    -------
+    tasks :
+        A list of dask arrays.
+    """
+    # make the numbers ints
+    windows = windows[["x", "y", "dx", "dy"]].apply(np.round).applymap(int)
+    # get limits
+    _, _, ny, nx = frames.shape
+    # create tasks
+    tasks = []
+    for row in windows.itertuples():
+        slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
+        slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
+        mean_frames = frames[:, :, slice_y, slice_x].mean(axis=[1, 2, 3])
+        task = mean_frames - mean_frames.min()
+        tasks.append(task)
+    return tasks
+
+
+def create_dataset(maps: typing.Iterable[xr.DataArray], windows: pd.DataFrame, metadata: dict) -> xr.Dataset:
+    """Create the dataset from the results of create_atlas_dask."""
+    new_index = windows.index.rename("grain")
+    windows = windows.set_index(new_index)
+    ds: xr.Dataset = windows.to_xarray()
+    maps = [reshape_to_map(m, metadata) for m in maps]
+    maps = xr.concat(maps, dim="grain")
+    ds = ds.assign({"maps": maps})
+    return ds
+
+
+def reshape_to_map(flat_arr: xr.DataArray, metadata: dict, inverted: bool = True) -> xr.DataArray:
+    reshaped = _reshape(flat_arr.values, metadata["shape"], metadata["snaking"])
+    coords = _get_coords(metadata, inverted=inverted)
+    return xr.DataArray(reshaped, coords=coords, dims=list(coords.keys()))
