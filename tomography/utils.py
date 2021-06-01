@@ -164,6 +164,9 @@ def set_real_aspect(axes: typing.Union[plt.Axes, typing.Iterable[plt.Axes]]) -> 
     return
 
 
-def pixel_to_Q(d1: np.ndarray, d2: np.ndarray, ai: AzimuthalIntegrator) -> np.ndarray:
+def pixel_to_Q(d1: np.ndarray, d2: np.ndarray, ai: AzimuthalIntegrator) -> xr.DataArray:
     """Map pixel position (d1, d2) to Q in nm-1."""
-    return ai.qCornerFunct(d1, d2)
+    arr = xr.DataArray(ai.qCornerFunct(d1, d2))
+    arr.attrs["standard_name"] = "Q"
+    arr.attrs["units"] = "nm$^{-1}$"
+    return arr

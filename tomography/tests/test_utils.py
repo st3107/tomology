@@ -54,3 +54,13 @@ def test_create_atlas():
     facet.fig.set_size_inches(4, 4)
     facet.fig.show()
     plt.clf()
+
+
+def test_map_to_Q():
+    """Test map_to_Q_vector."""
+    # test numpy
+    d1 = np.array([0, 1])
+    d2 = np.array([0, 1])
+    ai = utils.AzimuthalIntegrator(detector="Perkin", wavelength=2 * np.pi)
+    q = utils.pixel_to_Q(d1, d2, ai)
+    assert q.shape == (2,)
