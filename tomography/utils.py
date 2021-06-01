@@ -149,7 +149,8 @@ def _get_coords(start_doc: dict, inverted: bool) -> dict:
 
 def plot_grain_maps(atlas: xr.Dataset, **kwargs) -> xr.plot.FacetGrid:
     """Plot the grain maps from the atlas, the output from `create_atlas`."""
-    facet = atlas["maps"].plot(col="grain", **kwargs)
+    kwargs.setdefault("col", "grain")
+    facet = atlas["maps"].plot(**kwargs)
     set_real_aspect(facet.axes)
     return facet
 
@@ -170,3 +171,10 @@ def pixel_to_Q(d1: np.ndarray, d2: np.ndarray, ai: AzimuthalIntegrator) -> xr.Da
     arr.attrs["standard_name"] = "Q"
     arr.attrs["units"] = "nm$^{-1}$"
     return arr
+
+
+def assign_Q_to_atlas(atlas: xr.Dataset, ai: AzimuthalIntegrator) -> xr.Dataset:
+    """Assign Q grid to atlas"""
+    q = pixel_to_Q(atlas["y"].values, atlas["x"].values, ai)
+    dims = atlas["y"].dims
+    return atlas.assign({"Q": (dims, q)})
