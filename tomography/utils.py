@@ -125,6 +125,9 @@ def _fill_in_shape(df: pd.DataFrame, start_frame: int):
     data = np.zeros(shape)
     for row in df.itertuples():
         seq_num = int(row.frame) - start_frame
+        if seq_num < 0:
+            raise ValueError(
+                "Frame number smaller than the starting number: {}, {}".format(int(row.frame), start_frame))
         pos = _get_pos(seq_num, shape, snaking)
         data[pos] = row.mass
     return data

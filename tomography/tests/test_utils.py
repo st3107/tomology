@@ -43,7 +43,7 @@ def test_create_atlas():
     """Test create_atlas by plotting the figure out. Test assign_Q_to_atlas"""
     df = pd.DataFrame(
         {"y": [1, 2], "x": [1, 2], "mass": [1, 2], "size": [1, 2], "ecc": [1, 2], "signal": [1, 2],
-         "raw_mass": [1, 2], "frame": [0, 2], "particle": [0, 1]}
+         "raw_mass": [1, 2], "frame": [1, 3], "particle": [0, 1]}
     )
     df.attrs["shape"] = (2, 2)
     df.attrs["extents"] = [(-3, 3), (-1, 1)]
