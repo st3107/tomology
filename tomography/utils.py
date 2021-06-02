@@ -148,16 +148,16 @@ def _get_coords(start_doc: dict, inverted: bool) -> dict:
     return {"dim_{}".format(i): data for i, data in enumerate(coords)}
 
 
-def plot_grain_maps(atlas: xr.Dataset, **kwargs) -> xr.plot.FacetGrid:
+def plot_grain_maps(atlas: xr.Dataset, name: str = "maps", col: str = "grain", **kwargs) -> xr.plot.FacetGrid:
     """Plot the grain maps from the atlas, the output from `create_atlas`."""
-    kwargs.setdefault("col", "grain")
-    facet = atlas["maps"].plot(**kwargs)
+    kwargs.setdefault("col", col)
+    facet = atlas[name].plot(**kwargs)
     set_real_aspect(facet.axes)
     # automatically adjust size
     ratio = facet.axes.flatten()[0].get_data_ratio()
-    num = atlas["maps"].shape[0]
+    num = atlas[name].sizes[col]
     col_wrap = kwargs.get("col_wrap", 1)
-    facet.fig.set_size_inches((1.2 * num / col_wrap, 1.2 * ratio * col_wrap))
+    facet.fig.set_size_inches((1 * num / col_wrap, 1 * ratio * col_wrap))
     facet.set_titles("{value}")
     return facet
 
@@ -187,7 +187,7 @@ def assign_Q_to_atlas(atlas: xr.Dataset, ai: AzimuthalIntegrator) -> xr.Dataset:
     return atlas.assign({"Q": (dims, q)})
 
 
-def create_atlas_dask(windows: pd.DataFrame, frames: dask.array.Array) -> typing.List[dask.array.Array]:
+def create_atlas_dask(frames: dask.array.Array, windows: pd.DataFrame, verbose: bool = False) -> xr.DataArray:
     """Create a list of tasks to compute the grain maps. Each task is one grain map.
 
     The dataframe has columns "x", "y", "dx", "dy". Each row is a window on the frames. The window is
@@ -198,7 +198,9 @@ def create_atlas_dask(windows: pd.DataFrame, frames: dask.array.Array) -> typing
     windows :
         The dataframe with columns "x", "y", "dx", "dy".
     frames :
-        The array of dimensions (frame, count, y, x).
+        One frame.
+    verbose :
+        Whether to report status or not.
 
     Returns
     -------
@@ -208,30 +210,40 @@ def create_atlas_dask(windows: pd.DataFrame, frames: dask.array.Array) -> typing
     # make the numbers ints
     windows = windows[["x", "y", "dx", "dy"]].apply(np.round).applymap(int)
     # get limits
-    _, _, ny, nx = frames.shape
+    nf, _, ny, nx = frames.shape
     # create tasks
-    tasks = []
-    for row in windows.itertuples():
-        slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
-        slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
-        mean_frames = frames[:, :, slice_y, slice_x].mean(axis=[1, 2, 3])
-        task = mean_frames - mean_frames.min()
-        tasks.append(task)
-    return tasks
+    maps = []
+    for i, frame in enumerate(frames):
+        if verbose:
+            print("process frame {}/{}.".format(i + 1, nf), end="\r")
+        frame = frame.compute()
+        mean_frames = []
+        for row in windows.itertuples():
+            slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
+            slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
+            mean_frame = frame[:, slice_y, slice_x].mean()
+            mean_frames.append(mean_frame)
+        maps.append(xr.concat(mean_frames, dim="grain"))
+    return xr.concat(maps, dim="time")
 
 
-def create_dataset(maps: typing.Iterable[xr.DataArray], windows: pd.DataFrame, metadata: dict) -> xr.Dataset:
+def create_dataset(maps: xr.DataArray, windows: pd.DataFrame, metadata: dict, inverted: bool = True) -> xr.Dataset:
     """Create the dataset from the results of create_atlas_dask."""
-    new_index = windows.index.rename("grain")
-    windows = windows.set_index(new_index)
     ds: xr.Dataset = windows.to_xarray()
-    maps = [reshape_to_map(m, metadata) for m in maps]
-    maps = xr.concat(maps, dim="grain")
-    ds = ds.assign({"maps": maps})
+    old_dims = list(ds.dims)
+    new_values = reshape_to_matrix(maps.values, metadata)
+    new_coords = _get_coords(metadata, inverted=inverted)
+    new_dims = list(new_coords.keys()) + old_dims
+    ds = ds.assign_coords(new_coords)
+    ds = ds.assign({"maps": (new_dims, new_values)})
+    ds = ds.rename({old_dims[0]: "grain"})
     return ds
 
 
-def reshape_to_map(flat_arr: xr.DataArray, metadata: dict, inverted: bool = True) -> xr.DataArray:
-    reshaped = _reshape(flat_arr.values, metadata["shape"], metadata["snaking"])
-    coords = _get_coords(metadata, inverted=inverted)
-    return xr.DataArray(reshaped, coords=coords, dims=list(coords.keys()))
+def reshape_to_matrix(arr: np.ndarray, metadata: dict) -> np.ndarray:
+    reshaped = np.apply_along_axis(
+        lambda x: _reshape(x, metadata["shape"], metadata["snaking"]),
+        0,
+        arr
+    )
+    return reshaped
