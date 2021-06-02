@@ -10,6 +10,5 @@ tomography Documentation
    :maxdepth: 2
 
    installation
-   usage
-   release-history
+   process_streaming_data
    min_versions
