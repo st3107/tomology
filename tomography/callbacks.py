@@ -15,7 +15,8 @@ def gen_processed_images(images: typing.Iterable[typing.Union[list, np.ndarray]]
                          subtrahend: typing.Union[list, np.ndarray]) -> typing.Generator[np.ndarray, None, None]:
     """Generate processed image from a series of images.
 
-    The process procedure is (1) turn ot numpy array, (2) average the frames to a two dimensional image, (3) subtract the image and fill zero in negative pixels.
+    The process procedure is (1) turn ot numpy array, (2) average the frames to a two dimensional image, (3)
+    subtract the image and fill zero in negative pixels.
 
     Parameters
     ----------
@@ -42,7 +43,7 @@ def get_mean_frame(frames: np.ndarray) -> np.ndarray:
     """Average the frames to a two dimensional image."""
     n = np.ndim(frames)
     if n < 2:
-        raise ValueError("The dimension of {} < 2.".format(self.data_key))
+        raise ValueError("The dimension of {} < 2.".format(n))
     elif n == 2:
         mean_frame = np.copy(frames)
     elif n == 3:
