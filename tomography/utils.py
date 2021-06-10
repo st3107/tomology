@@ -1,12 +1,25 @@
 import typing
 
 import dask.array
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import trackpy as tp
 import xarray as xr
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
+
+_VERBOSE = 1
+
+
+def set_verbose(level: int) -> None:
+    global _VERBOSE
+    _VERBOSE = level
+
+
+def my_print(*args, **kwargs) -> None:
+    if _VERBOSE > 0:
+        print(*args, **kwargs)
 
 
 def reshape(dataset: xr.Dataset, name: str, inverted: bool = True) -> xr.DataArray:
@@ -250,3 +263,101 @@ def reshape_to_matrix(arr: np.ndarray, metadata: dict) -> np.ndarray:
         arr
     )
     return reshaped
+
+
+def min_and_max_along_time(data: xr.DataArray) -> xr.DataArray:
+    """Extract the minimum and maximum values of each pixel in a series of mean frames. Return a data array.
+    First is the min array and the second is the max array."""
+    min_arr = max_arr = np.mean(data[0].values, axis=0)
+    num = data.shape[0]
+    my_print("Process frame: {} / {}".format(1, num), end="\r")
+    for i in range(1, len(data)):
+        arr = np.mean(data[i].values, axis=0)
+        min_arr = np.fmin(min_arr, arr)
+        max_arr = np.fmax(max_arr, arr)
+        my_print("Process frame: {} / {}".format(i + 1, num), end="\r")
+    return xr.DataArray(np.stack([min_arr, max_arr]))
+
+
+def reshape_to_xarray(arr: xr.DataArray, metadata: dict) -> xr.DataArray:
+    """Reshape a 1D data array to an 2D data array according to the metadata about the bluesky plan.
+    The coordinates will also be reshaped."""
+    data = reshape_to_matrix(arr.values, metadata)
+    coords = {name: xr.DataArray(reshape_to_matrix(coord.values, metadata)) for name, coord in arr.coords.items()}
+    return xr.DataArray(data, coords=coords)
+
+
+def reformat_data(ds: xr.Dataset) -> xr.Dataset:
+    """Reformat the data loaded from the databroker."""
+    frames = np.arange(0, ds["time"].shape[0], 1)
+    return ds.rename_dims({"time": "frame"}).reset_index("time").drop("time_").assign_coords({"frame": frames})
+
+
+def draw_windows(df: pd.DataFrame, ax: plt.Axes) -> None:
+    """Draw windows on the axes."""
+    for row in df.itertuples():
+        xy = (row.x - row.dx, row.y - row.dy)
+        width = row.dx * 2 - 1
+        height = row.dy * 2 - 1
+        patch = patches.Rectangle(xy, width=width, height=height, linewidth=1, edgecolor="r", fill=False)
+        ax.add_patch(patch)
+    return
+
+
+def create_windows_from_size(df: pd.DataFrame, multiplier: float) -> pd.DataFrame:
+    df2 = pd.DataFrame()
+    df2["x"] = df["x"].apply(np.round).apply(int)
+    df2["y"] = df["y"].apply(np.round).apply(int)
+    df2["dx"] = df2["dy"] = (df["size"] * multiplier).apply(np.round).apply(int)
+    return df2
+
+
+def create_windows_from_width(df: pd.DataFrame, width: int) -> pd.DataFrame:
+    df2 = pd.DataFrame()
+    df2["x"] = df["x"].apply(np.round).apply(int)
+    df2["y"] = df["y"].apply(np.round).apply(int)
+    df2["dx"] = df2["dy"] = int(np.round(width))
+    return df2
+
+
+def track_peaks(frames: xr.DataArray, windows: pd.DataFrame) -> xr.DataArray:
+    """Create a list of tasks to compute the grain maps. Each task is one grain map."""
+    # get limits
+    nf, _, ny, nx = frames.shape
+    # create tasks
+    maps = []
+    for i, frame in enumerate(frames):
+        my_print("Process frame {} / {}.".format(i + 1, nf), end="\r")
+        frame = frame.compute()
+        mean_frames = []
+        for row in windows.itertuples():
+            slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
+            slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
+            mean_frame = frame[:, slice_y, slice_x].mean()
+            mean_frames.append(mean_frame)
+        maps.append(xr.concat(mean_frames, dim="grain"))
+    return xr.concat(maps, dim="time")
+
+
+def create_grain_maps(frames: xr.DataArray, windows: pd.DataFrame, metadata: dict,
+                      inverted: bool = True) -> xr.Dataset:
+    """Create grain maps from frames.
+
+    Parameters
+    ----------
+    frames :
+        The dask array of raw diffraction frames.
+    windows :
+        The data frame of x, y, dx, dy. The x, y positions in pixels and the half width of the window.
+    metadata :
+        The start document of the run.
+    inverted :
+        Use x[::-1] and y[::-1] in grain maps.
+
+    Returns
+    -------
+    ds :
+        The dataset of grain maps.
+    """
+    maps = track_peaks(frames, windows)
+    return create_dataset(maps, windows, metadata, inverted=inverted)
