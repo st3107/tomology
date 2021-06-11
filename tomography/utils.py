@@ -1,6 +1,5 @@
 import typing
 
-import dask.array
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,9 +35,10 @@ def reshape(dataset: xr.Dataset, name: str, inverted: bool = True) -> xr.DataArr
 
 def _reshape(arr: np.ndarray, shape: typing.List[int], snaking: typing.List[bool]) -> np.ndarray:
     reshaped = arr.reshape(shape)
-    for i, row in enumerate(reshaped):
-        if snaking[1] and i % 2 == 1:
-            reshaped[i] = row[::-1]
+    if len(snaking) > 1:
+        for i, row in enumerate(reshaped):
+            if snaking[1] and i % 2 == 1:
+                reshaped[i] = row[::-1]
     return reshaped
 
 
@@ -203,7 +203,7 @@ def assign_Q_to_atlas(atlas: xr.Dataset, ai: AzimuthalIntegrator) -> xr.Dataset:
     return atlas.assign({"Q": (dims, q)})
 
 
-def create_atlas_dask(frames: dask.array.Array, windows: pd.DataFrame, verbose: bool = False) -> xr.DataArray:
+def create_atlas_dask(frames: xr.DataArray, windows: pd.DataFrame, verbose: bool = False) -> xr.DataArray:
     """Create a list of tasks to compute the grain maps. Each task is one grain map.
 
     The dataframe has columns "x", "y", "dx", "dy". Each row is a window on the frames. The window is
