@@ -1,0 +1,9 @@
+uid,sample,task,beam
+4714edaf-227b-4caa-a53b-bc8bf110f7e5,PARAMID-2,a coarse grid rocking curve,focus
+5959b25f-fcfc-4ec2-9187-7d8bce19711d,PARAMID-2,a coarse grid rocking curve,slit
+91ebdedb-1719-4753-a15b-8bd515564816,PARAMID-2,a test,slit
+e555848e-d22e-44f6-85a6-1fb13705e02c,PARADIM-2,a fly scan rocking curve,slit
+257b5581-ca78-4309-9c50-b4d65d80152a,PARADIM-2,a single point rocking curve,slit
+cf821cac-cdb1-49e7-8bf9-c10cb677f0a3,PARADIM-1,redo coarse rocking curve at 0,focus
+b0203814-c252-4abe-9c44-692725298508,PARADIM-1,redo single point rocking curve,focus
+d576d21a-d7b6-4539-8c23-0cefa1b1b25c,PARADIM-1,redo step grid scan,focus
