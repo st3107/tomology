@@ -1,5 +1,6 @@
 # data folder
-notebooks/
+notebooks/data/*.npy
+notebooks/data/*.nc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
