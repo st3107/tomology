@@ -15,8 +15,3 @@ db_ana = Broker.named("analysis")
 df_uid = pd.read_csv("./data/uid.csv")
 db_csv = DataFrameClient(mongo_client.csv_db, "/Volumes/STAO_EXT/csv_db_data_external")
 db_cdf = DataSetClient(mongo_client.cdf_db, "/Volumes/STAO_EXT/cdf_db_data_external")
-
-del mongo_client
-del Broker, MongoClient, DataSetClient, DataFrameClient
-
-print("Namespace:", [s for s in dir() if not s.startswith("_")])

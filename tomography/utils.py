@@ -35,10 +35,12 @@ def reshape(dataset: xr.Dataset, name: str, inverted: bool = True) -> xr.DataArr
 
 def _reshape(arr: np.ndarray, shape: typing.List[int], snaking: typing.List[bool]) -> np.ndarray:
     reshaped = arr.reshape(shape)
-    if len(snaking) > 1:
+    if len(snaking) > 1 and not snaking[1]:
+        new_reshaped = reshaped.copy()
         for i, row in enumerate(reshaped):
-            if snaking[1] and i % 2 == 1:
-                reshaped[i] = row[::-1]
+            if i % 2 == 1:
+                new_reshaped[i] = row[::-1]
+        reshaped = new_reshaped
     return reshaped
 
 
@@ -258,7 +260,7 @@ def create_dataset(maps: xr.DataArray, windows: pd.DataFrame, metadata: dict, in
 
 def reshape_to_matrix(arr: np.ndarray, metadata: dict) -> np.ndarray:
     reshaped = np.apply_along_axis(
-        lambda x: _reshape(x, metadata["shape"], metadata["snaking"]),
+        lambda x: _reshape(x, metadata["shape"], metadata.get("snaking", [])),
         0,
         arr
     )
@@ -361,3 +363,17 @@ def create_grain_maps(frames: xr.DataArray, windows: pd.DataFrame, metadata: dic
     """
     maps = track_peaks(frames, windows)
     return create_dataset(maps, windows, metadata, inverted=inverted)
+
+
+def select_frames(image_sum_data: xr.DataArray, metadata: dict, start_row: int = 0, end_row: int = None, **kwargs) -> None:
+    """Select the frames according to the summation of the intensity on the image."""
+    image_sum_matrix = reshape_to_xarray(image_sum_data, metadata)
+    kwargs.setdefault("size", 8)
+    if end_row is None:
+        end_row = image_sum_matrix.shape[0]
+    image_sum_matrix = image_sum_matrix[start_row:end_row]
+    facet = image_sum_matrix.plot(**kwargs)
+    index = image_sum_matrix.frame.values
+    start_index, end_index = index.min(), index.max()
+    facet.axes.set_title("From frame {} to frame {}".format(start_index, end_index))
+    set_real_aspect(facet.axes)
