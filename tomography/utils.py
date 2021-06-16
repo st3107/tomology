@@ -180,6 +180,20 @@ def plot_grain_maps(atlas: xr.Dataset, name: str = "maps", col: str = "grain", *
     return facet
 
 
+def plot_along_grains(grain_maps: xr.DataArray, col: str = "grain", **kwargs) -> xr.plot.FacetGrid:
+    """Plot the grain maps from the grain maps."""
+    kwargs.setdefault("col", col)
+    facet = grain_maps.plot(**kwargs)
+    set_real_aspect(facet.axes)
+    # automatically adjust size
+    ratio = facet.axes.flatten()[0].get_data_ratio()
+    num = grain_maps.sizes[col]
+    col_wrap = kwargs.get("col_wrap", 1)
+    facet.fig.set_size_inches((1 * num / col_wrap, 1 * ratio * col_wrap))
+    facet.set_titles("{value}")
+    return facet
+
+
 def set_real_aspect(axes: typing.Union[plt.Axes, typing.Iterable[plt.Axes]]) -> None:
     """Change all axes to be equal aspect."""
     if isinstance(axes, typing.Iterable):
