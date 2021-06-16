@@ -35,7 +35,7 @@ def reshape(dataset: xr.Dataset, name: str, inverted: bool = True) -> xr.DataArr
 
 def _reshape(arr: np.ndarray, shape: typing.List[int], snaking: typing.List[bool]) -> np.ndarray:
     reshaped = arr.reshape(shape)
-    if len(snaking) > 1 and not snaking[1]:
+    if len(snaking) > 1 and snaking[1]:
         new_reshaped = reshaped.copy()
         for i, row in enumerate(reshaped):
             if i % 2 == 1:
