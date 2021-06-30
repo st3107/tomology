@@ -391,3 +391,18 @@ def select_frames(image_sum_data: xr.DataArray, metadata: dict, start_row: int =
     start_index, end_index = index.min(), index.max()
     facet.axes.set_title("From frame {} to frame {}".format(start_index, end_index))
     set_real_aspect(facet.axes)
+
+
+def average_intensity(frame: xr.DataArray, windows: pd.DataFrame) -> xr.DataArray:
+    """Calculate the average intensity in windows. Return an array of average intensity."""
+    # get limits
+    ny, nx = frame.shape[-2], frame.shape[-1]
+    # create tasks
+    frame = frame.compute()
+    mean_frames = []
+    for row in windows.itertuples():
+        slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
+        slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
+        mean_frame = frame[slice_y, slice_x].mean()
+        mean_frames.append(mean_frame)
+    return xr.concat(mean_frames, dim="grain")
