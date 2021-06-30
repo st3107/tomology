@@ -68,3 +68,32 @@ def test_map_to_Q():
     ai = utils.AzimuthalIntegrator(detector="Perkin", wavelength=2 * np.pi)
     q = utils.pixel_to_Q(d1, d2, ai)
     assert q.shape == (2,)
+
+
+def test_Calculator():
+    c = utils.Calculator()
+
+    c.frames_arr = xr.DataArray([[[[1, 0], [0, 0]]], [[[0, 0], [1, 1]]]])
+    c.calc_dark_and_light_from_frames_arr()
+    expect1 = xr.DataArray([[[0, 0], [0, 0]], [[1, 0], [1, 1]]], coords={"dim_0": ["dark", "light"]})
+    assert c.dark_and_light.equals(expect1)
+
+    c.calc_peaks_from_light_frame(1, noise_size=0)
+    expect2 = pd.DataFrame(columns=["y", "x", "mass", "size", "ecc", "signal", "raw_mass"])
+    assert c.peaks.equals(expect2)
+
+    c.peaks = pd.DataFrame([[1.5, 0.5, 3], [0.5, 0.5, 2], [1.5, 1.5, 1]],
+                           columns=["y", "x", "mass"])
+    c.calc_windows_from_peaks(100, 0)
+    expect3 = pd.DataFrame([[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 1, 0]], columns=["y", "dy", "x", "dx"])
+    assert c.windows.equals(expect3)
+
+    c.calc_intensity_in_windows()
+    expect4 = xr.DataArray([[0., 1.], [1., 0], [0., 1.]], dims=["grain", "frame"])
+    assert c.intensity.equals(expect4)
+
+    c.metadata = {"shape": [2, 2], "extents": [(-1, 0), (1, 2)], "snaking": (False, True)}
+    c.intensity = xr.DataArray([[1, 2, 3, 4]])
+    c.calc_grain_maps_by_reshaping()
+    expect5 = xr.DataArray([[[1, 2], [4, 3]]], coords={"dim_1": [-1., 0.], "dim_2": [1., 2.]}, dims=["dim_0", "dim_1", "dim_2"])
+    assert c.grain_maps.equals(expect5)
