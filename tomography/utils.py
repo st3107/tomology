@@ -400,38 +400,35 @@ def select_frames(image_sum_data: xr.DataArray, metadata: dict, start_row: int =
     set_real_aspect(facet.axes)
 
 
-def average_intensity(frame: xr.DataArray, windows: pd.DataFrame) -> xr.DataArray:
+def average_intensity(frame: np.ndarray, windows: pd.DataFrame) -> np.ndarray:
     """Calculate the average intensity in windows. Return an array of average intensity."""
-    # get limits
-    ny, nx = frame.shape[-2], frame.shape[-1]
+    if frame.ndim < 2:
+        raise CalculatorError("frame must have no less than 2 dimensions.")
+    elif frame.ndim > 2:
+        n = frame.ndim - 2
+        frame = frame.mean(axis=tuple(range(n)))
     # create tasks
-    frame = frame.compute()
-    mean_frames = []
+    I_in_windows = []
     for row in windows.itertuples():
-        slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy, ny))
-        slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx, nx))
-        mean_frame = frame[slice_y, slice_x].mean()
-        mean_frames.append(mean_frame)
-    return xr.concat(mean_frames, dim="grain")
+        slice_y = slice(row.y - row.dy, row.y + row.dy + 1)
+        slice_x = slice(row.x - row.dx, row.x + row.dx + 1)
+        I_in_window = np.mean(frame[slice_y, slice_x], dtype=frame.dtype)
+        I_in_windows.append(I_in_window)
+    return np.array(I_in_windows)
 
 
-def track_peaks2(frames: xr.DataArray, windows: pd.DataFrame) -> xr.DataArray:
+def track_peaks2(frames: xr.DataArray, windows: pd.DataFrame) -> np.ndarray:
     """Create a list of tasks to compute the grain maps. Each task is one grain map."""
     # get limits
-    nf, _, ny, nx = frames.shape
+    nf = frames.shape[0]
     # create intensity vs time for each grain
-    maps = []
+    intensities = []
     for i, frame in enumerate(frames):
         my_print("Process frame {} / {}.".format(i + 1, nf), end="\r")
-        frame = frame.compute()
-        mean_frames = []
-        for row in windows.itertuples():
-            slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy + 1, ny))
-            slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx + 1, nx))
-            mean_frame = frame[:, slice_y, slice_x].mean()
-            mean_frames.append(mean_frame)
-        maps.append(xr.concat(mean_frames, dim="grain"))
-    return xr.concat(maps, dim="frame").transpose("grain", "frame")
+        intensity = average_intensity(frame.values, windows)
+        intensities.append(intensity)
+    # axis: grain, frame
+    return np.stack(intensities).transpose()
 
 
 def summary_in_a_dataset(windows: pd.DataFrame):
@@ -444,14 +441,14 @@ def summary_in_a_dataset(windows: pd.DataFrame):
 
 def reshape_to_ndarray(arr: np.ndarray, metadata: dict) -> np.ndarray:
     if "shape" not in metadata:
-        raise KeyError("Missing key '' in metadata.".format("shape"))
+        raise CalculatorError("Missing key '' in metadata.".format("shape"))
     shape = list(arr.shape)[:-1]
     shape.extend(metadata["shape"])
     arr: np.ndarray = arr.reshape(shape)
     # if snaking the row
     if "snaking" in metadata and len(metadata["snaking"]) > 1 and metadata["snaking"][1]:
         if len(metadata["shape"]) != 2:
-            raise ValueError("snaking only works for the 2 dimension array.")
+            raise CalculatorError("snaking only works for the 2 dimension array.")
         n = arr.shape[1]
         for i in range(n):
             if i % 2 == 1:
@@ -487,6 +484,31 @@ def create_windows_from_width2(df: pd.DataFrame, width: int) -> pd.DataFrame:
     return df2
 
 
+def min_and_max_along_time2(data: xr.DataArray) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """Extract the minimum and maximum values of each pixel in a series of mean frames. Return a data array.
+    First is the min array and the second is the max array."""
+    min_arr = max_arr = np.mean(data[0].values, axis=0)
+    num = data.shape[0]
+    my_print("Process frame: {} / {}".format(1, num), end="\r")
+    for i in range(1, len(data)):
+        arr = np.mean(data[i].values, axis=0)
+        min_arr = np.fmin(min_arr, arr)
+        max_arr = np.fmax(max_arr, arr)
+        my_print("Process frame: {} / {}".format(i + 1, num), end="\r")
+    return min_arr, max_arr
+
+
+def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
+    """Get coordinates."""
+    if "shape" not in start_doc:
+        raise KeyError("Missing key '{}' in the metadata.".format("shape"))
+    if "extents" not in start_doc:
+        raise KeyError("Missing key '{}' in the metadata".format("extents"))
+    shape = start_doc["shape"]
+    extents = [np.asarray(extent) for extent in start_doc["extents"]]
+    return [np.linspace(*extent, num) for extent, num in zip(extents, shape)]
+
+
 class CalculatorError(Exception):
     pass
 
@@ -494,13 +516,24 @@ class CalculatorError(Exception):
 class Calculator(object):
 
     def __init__(self):
+        # dims: time, ..., pixel_y, pixel_x
         self.frames_arr: typing.Union[None, xr.DataArray] = None
-        self.dark_and_light: typing.Union[None, xr.DataArray] = None
+        # dims: pixel_y, pixel_x
+        self.dark: typing.Union[None, np.ndarray] = None
+        # dims: pixel_y, pixel_x
+        self.light: typing.Union[None, np.ndarray] = None
+        # index: all_grain
         self.peaks: typing.Union[None, pd.DataFrame] = None
+        # index: grain
         self.windows: typing.Union[None, pd.DataFrame] = None
-        self.intensity: typing.Union[None, xr.DataArray] = None
-        self.grain_maps: typing.Union[None, xr.DataArray] = None
-        self.metadata = None
+        # dims: grain, dim_1, ..., dim_n
+        self.intensity: typing.Union[None, np.ndarray] = None
+        # dims: grain
+        self.bkg_intensity: typing.Union[None, np.ndarray] = None
+        # dims: dim_1, ..., dim_n
+        self.coords: typing.Union[None, typing.List[np.ndarray]] = None
+        # keys: shape, extents, snaking
+        self.metadata: typing.Union[None, dict] = None
 
     def _check_attr(self, name: str):
         if getattr(self, name) is None:
@@ -508,11 +541,11 @@ class Calculator(object):
 
     def calc_dark_and_light_from_frames_arr(self):
         self._check_attr("frames_arr")
-        self.dark_and_light = min_and_max_along_time(self.frames_arr)
+        self.dark, self.light = min_and_max_along_time2(self.frames_arr)
 
     def calc_peaks_from_light_frame(self, diameter: typing.Union[int, tuple], *args, **kwargs):
-        self._check_attr("dark_and_light")
-        self.peaks = tp.locate(self.dark_and_light[1].values, diameter, *args, **kwargs)
+        self._check_attr("light")
+        self.peaks = tp.locate(self.light, diameter, *args, **kwargs)
 
     def calc_windows_from_peaks(self, num: int, width: int):
         self._check_attr("peaks")
@@ -523,10 +556,34 @@ class Calculator(object):
         self._check_attr("frames_arr")
         self._check_attr("windows")
         self.intensity = track_peaks2(self.frames_arr, self.windows)
+        if self.dark is not None:
+            self.bkg_intensity = average_intensity(self.dark, self.windows)
+            self.intensity = (self.intensity.transpose() - self.bkg_intensity).transpose()
+        else:
+            my_print("Attribute 'dark' is None. No background correction.")
 
-    def calc_grain_maps_by_reshaping(self):
+    def reshape_intensity(self):
         self._check_attr("metadata")
-        if "shape" not in self.metadata:
-            raise CalculatorError("Missing '{}' in metadata.".format(metadata))
         self._check_attr("intensity")
-        self.grain_maps = reshape_to_xarray2(self.intensity, self.metadata)
+        self.intensity = reshape_to_ndarray(self.intensity, self.metadata)
+
+    def calc_coords(self):
+        self.coords = get_coords2(self.metadata)
+
+    def to_dataset(self):
+        dct = dict()
+        if self.dark is not None:
+            dct["dark"] = xr.DataArray(self.dark, dims=["pixel_y", "pixel_x"])
+        if self.light is not None:
+            dct["light"] = xr.DataArray(self.light, dims=["pixel_y", "pixel_x"])
+        if self.intensity is not None:
+            dims = ["dim_{}".format(i) for i in range(self.intensity.ndim - 1)]
+            dct["intensity"] = xr.DataArray(self.intensity, dims=["grain"] + dims)
+        ds = xr.Dataset(dct)
+        if self.coords is not None:
+            coords = {"dim_{}".format(i): coord for i, coord in enumerate(self.coords)}
+            ds = ds.assign_coords(coords)
+        if self.windows is not None:
+            ds2 = self.windows.rename_axis(index="grain").to_xarray()
+            ds = ds.merge(ds2)
+        return ds

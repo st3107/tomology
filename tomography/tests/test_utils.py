@@ -70,13 +70,15 @@ def test_map_to_Q():
     assert q.shape == (2,)
 
 
-def test_Calculator():
+def test_Calculator_1():
     c = utils.Calculator()
 
     c.frames_arr = xr.DataArray([[[[1, 0], [0, 0]]], [[[0, 0], [1, 1]]]])
     c.calc_dark_and_light_from_frames_arr()
-    expect1 = xr.DataArray([[[0, 0], [0, 0]], [[1, 0], [1, 1]]], coords={"dim_0": ["dark", "light"]})
-    assert c.dark_and_light.equals(expect1)
+    expect0 = np.array([[0, 0], [0, 0]])
+    expect1 = np.array([[1, 0], [1, 1]])
+    assert np.array_equal(c.dark, expect0)
+    assert np.array_equal(c.light, expect1)
 
     c.calc_peaks_from_light_frame(1, noise_size=0)
     expect2 = pd.DataFrame(columns=["y", "x", "mass", "size", "ecc", "signal", "raw_mass"])
@@ -89,11 +91,22 @@ def test_Calculator():
     assert c.windows.equals(expect3)
 
     c.calc_intensity_in_windows()
-    expect4 = xr.DataArray([[0., 1.], [1., 0], [0., 1.]], dims=["grain", "frame"])
-    assert c.intensity.equals(expect4)
+    expect4 = np.array([[0., 1.], [1., 0], [0., 1.]])
+    assert np.array_equal(c.intensity, expect4)
+
+    ds = c.to_dataset()
+    print(ds)
+
+
+def test_Calculator_2():
+    c = utils.Calculator()
 
     c.metadata = {"shape": [2, 2], "extents": [(-1, 0), (1, 2)], "snaking": (False, True)}
-    c.intensity = xr.DataArray([[1, 2, 3, 4]])
-    c.calc_grain_maps_by_reshaping()
-    expect5 = xr.DataArray([[[1, 2], [4, 3]]], coords={"dim_1": [-1., 0.], "dim_2": [1., 2.]}, dims=["dim_0", "dim_1", "dim_2"])
-    assert c.grain_maps.equals(expect5)
+    c.intensity = np.array([[1, 2, 3, 4]])
+    c.reshape_intensity()
+    expect5 = np.array([[[1, 2], [4, 3]]])
+    assert np.array_equal(c.intensity, expect5)
+
+    c.calc_coords()
+    assert np.array_equal(c.coords[0], np.array([-1., 0.]))
+    assert np.array_equal(c.coords[1], np.array([1., 2.]))
