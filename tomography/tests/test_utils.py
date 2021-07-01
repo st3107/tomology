@@ -5,6 +5,8 @@ import xarray as xr
 
 import tomography.utils as utils
 
+plt.ioff()
+
 
 def test_reshape():
     """Test reshape in a snaking axes case."""
@@ -80,6 +82,13 @@ def test_Calculator_1():
     assert np.array_equal(c.dark, expect0)
     assert np.array_equal(c.light, expect1)
 
+    c.show_dark()
+    plt.show(block=False)
+    plt.clf()
+    c.show_light()
+    plt.show(block=False)
+    plt.clf()
+
     c.calc_peaks_from_light_frame(1, noise_size=0)
     expect2 = pd.DataFrame(columns=["y", "x", "mass", "size", "ecc", "signal", "raw_mass"])
     assert c.peaks.equals(expect2)
@@ -90,9 +99,17 @@ def test_Calculator_1():
     expect3 = pd.DataFrame([[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 1, 0]], columns=["y", "dy", "x", "dx"])
     assert c.windows.equals(expect3)
 
+    c.show_windows()
+    plt.show(block=False)
+    plt.clf()
+
     c.calc_intensity_in_windows()
     expect4 = np.array([[0., 1.], [1., 0], [0., 1.]])
     assert np.array_equal(c.intensity, expect4)
+
+    c.show_intensity()
+    plt.show(block=False)
+    plt.clf()
 
     ds = c.to_dataset()
     print(ds)
@@ -101,12 +118,20 @@ def test_Calculator_1():
 def test_Calculator_2():
     c = utils.Calculator()
 
-    c.metadata = {"shape": [2, 2], "extents": [(-1, 0), (1, 2)], "snaking": (False, True)}
-    c.intensity = np.array([[1, 2, 3, 4]])
+    c.metadata = {"shape": [2, 2], "extents": [(-1, 0), (1, 3)], "snaking": (False, True)}
+    c.intensity = np.array([[1, 2, 3, 4], [4, 3, 2, 1]])
     c.reshape_intensity()
-    expect5 = np.array([[[1, 2], [4, 3]]])
+    expect5 = np.array([[[1, 2], [4, 3]], [[4, 3], [1, 2]]])
     assert np.array_equal(c.intensity, expect5)
+
+    c.show_intensity()
+    plt.show(block=False)
+    plt.clf()
 
     c.calc_coords()
     assert np.array_equal(c.coords[0], np.array([-1., 0.]))
-    assert np.array_equal(c.coords[1], np.array([1., 2.]))
+    assert np.array_equal(c.coords[1], np.array([1., 3.]))
+
+    c.show_intensity(real_aspect=True)
+    plt.show(block=False)
+    plt.clf()

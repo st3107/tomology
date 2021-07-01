@@ -8,6 +8,7 @@ import pandas as pd
 import trackpy as tp
 import xarray as xr
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
+from xarray.plot import FacetGrid
 
 _VERBOSE = 1
 
@@ -319,10 +320,10 @@ def reformat_data(ds: xr.Dataset) -> xr.Dataset:
 def draw_windows(df: pd.DataFrame, ax: plt.Axes) -> None:
     """Draw windows on the axes."""
     for row in df.itertuples():
-        xy = (row.x - row.dx, row.y - row.dy)
-        width = row.dx * 2 - 1
-        height = row.dy * 2 - 1
-        patch = patches.Rectangle(xy, width=width, height=height, linewidth=1, edgecolor="r", fill=False)
+        xy = (row.x - row.dx - 0.5, row.y - row.dy - 0.5)
+        width = row.dx * 2 + 1
+        height = row.dy * 2 + 1
+        patch = patches.Rectangle(xy, width=width, height=height, linewidth=2, edgecolor="r", fill=False)
         ax.add_patch(patch)
     return
 
@@ -570,20 +571,66 @@ class Calculator(object):
     def calc_coords(self):
         self.coords = get_coords2(self.metadata)
 
-    def to_dataset(self):
+    def dark_to_xarray(self) -> xr.DataArray:
+        return xr.DataArray(self.dark, dims=["pixel_y", "pixel_x"])
+
+    def light_to_xarray(self) -> xr.DataArray:
+        return xr.DataArray(self.light, dims=["pixel_y", "pixel_x"])
+
+    def intensity_to_xarray(self) -> xr.DataArray:
+        dims = ["dim_{}".format(i) for i in range(self.intensity.ndim - 1)]
+        arr = xr.DataArray(self.intensity, dims=["grain"] + dims)
+        if self.coords is not None:
+            coords = self.coords_to_dict()
+            arr = arr.assign_coords(coords)
+        return arr
+
+    def windows_to_xarray(self) -> xr.DataArray:
+        return self.windows.rename_axis(index="grain").to_xarray()
+
+    def coords_to_dict(self) -> dict:
+        return {"dim_{}".format(i): coord for i, coord in enumerate(self.coords)}
+
+    def to_dataset(self) -> xr.Dataset:
         dct = dict()
         if self.dark is not None:
-            dct["dark"] = xr.DataArray(self.dark, dims=["pixel_y", "pixel_x"])
+            dct["dark"] = self.dark_to_xarray()
         if self.light is not None:
-            dct["light"] = xr.DataArray(self.light, dims=["pixel_y", "pixel_x"])
+            dct["light"] = self.light_to_xarray()
         if self.intensity is not None:
-            dims = ["dim_{}".format(i) for i in range(self.intensity.ndim - 1)]
-            dct["intensity"] = xr.DataArray(self.intensity, dims=["grain"] + dims)
+            dct["intensity"] = self.intensity_to_xarray()
         ds = xr.Dataset(dct)
-        if self.coords is not None:
-            coords = {"dim_{}".format(i): coord for i, coord in enumerate(self.coords)}
-            ds = ds.assign_coords(coords)
         if self.windows is not None:
-            ds2 = self.windows.rename_axis(index="grain").to_xarray()
+            ds2 = self.windows_to_xarray()
             ds = ds.merge(ds2)
         return ds
+
+    def show_dark(self, *args, **kwargs) -> FacetGrid:
+        self._check_attr("dark")
+        facet = self.dark_to_xarray().plot(*args, **kwargs)
+        set_real_aspect(facet.axes)
+        return facet
+
+    def show_light(self, *args, **kwargs) -> FacetGrid:
+        self._check_attr("light")
+        facet = self.light_to_xarray().plot(*args, **kwargs)
+        set_real_aspect(facet.axes)
+        return facet
+
+    def show_windows(self, *args, **kwargs) -> FacetGrid:
+        self._check_attr("light")
+        self._check_attr("windows")
+        facet = self.light_to_xarray().plot(*args, **kwargs)
+        set_real_aspect(facet.axes)
+        draw_windows(self.windows, facet.axes)
+        return facet
+
+    def show_intensity(self, *args, real_aspect: bool = False, **kwargs) -> FacetGrid:
+        arr = self.intensity_to_xarray()
+        if arr.shape[0] > 1:
+            kwargs.setdefault("col", arr.dims[0])
+        facet: FacetGrid = arr.plot(*args, **kwargs)
+        facet.set_titles("{value}")
+        if real_aspect:
+            set_real_aspect(facet.axes)
+        return facet
