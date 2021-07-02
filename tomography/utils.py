@@ -421,7 +421,7 @@ def average_intensity(frame: np.ndarray, windows: pd.DataFrame) -> np.ndarray:
 def track_peaks2(frames: xr.DataArray, windows: pd.DataFrame) -> np.ndarray:
     """Create a list of tasks to compute the grain maps. Each task is one grain map."""
     # get limits
-    nf = str(len(frames)) if getattr(frames, "__len__") else "?"
+    nf = str(len(frames)) if hasattr(frames, "__len__") else "?"
     # create intensity vs time for each grain
     intensities = []
     for i, frame in enumerate(frames):
