@@ -83,7 +83,8 @@ def fly_scan_2d(
     shutter_close: typing.Any,
     move_velocity: float,
     *,
-    shutter_wait: float = 1.,
+    shutter_wait_open: float = 1.,
+    shutter_wait_close: float = 2.,
     take_dark: bool = True,
     md: dict = None,
     backoff: float = 0.,
@@ -203,7 +204,7 @@ def fly_scan_2d(
             # wait for the pre-fly motion to stop
             yield from bps.mv(fly_motor.velocity, speed)
             yield from bps.mv(shutter, shutter_open)
-            yield from bps.sleep(shutter_wait)
+            yield from bps.sleep(shutter_wait_open)
             fly_group = short_uid("fly")
             yield from bps.abs_set(fly_motor, _fly_stop + _backoff, group=fly_group)
             # TODO gate starting to take data on motor position
@@ -229,7 +230,7 @@ def fly_scan_2d(
                 yield from bps.save()
             yield from bps.checkpoint()
             yield from bps.mv(shutter, shutter_close)
-            yield from bps.sleep(shutter_wait)
+            yield from bps.sleep(shutter_wait_close)
             if take_dark:
                 yield from dark_plan(ad)
             yield from bps.wait(group=fly_group)
