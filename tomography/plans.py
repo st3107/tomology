@@ -83,11 +83,11 @@ def fly_scan_2d(
     shutter_close: typing.Any,
     move_velocity: float,
     *,
-    shutter_wait: float = 2.,
+    shutter_wait: float = 1.,
     take_dark: bool = True,
     md: dict = None,
     backoff: float = 0.,
-    snake: bool = True,
+    snake: bool = False,
 ):
     """
     Collect a 2D XRD map by "flying" in one direction.
