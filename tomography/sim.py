@@ -15,11 +15,11 @@ class FakeAreaDetector(Device):
 
     def trigger(self):
         self.cam.img.exposure_time = self.cam.acquire_time.value * self.images_per_set.value
-        super(FakeAreaDetector, self).trigger()
+        return super(FakeAreaDetector, self).trigger()
 
 
 class DelayedSynAxis(SynAxis):
 
     def set(self, value):
         self.delay = abs(self.position - value) / self.velocity.value
-        super(DelayedSynAxis, self).set(value)
+        return super(DelayedSynAxis, self).set(value)

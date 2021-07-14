@@ -322,7 +322,6 @@ def fly_scan_nd(
             yield from bps.sleep(shutter_wait_open)
             fly_group = short_uid("fly")
             yield from bps.abs_set(fly_motor, _fly_stop + _backoff, group=fly_group)
-            # TODO gate starting to take data on motor position
             for j in range(fly_pixels):
 
                 fly_pixel_group = short_uid("fly_pixel")
@@ -351,8 +350,9 @@ def fly_scan_nd(
                 # if snaking, flip these for the next pass through
                 _fly_start, _fly_stop = _fly_stop, _fly_start
                 _backoff = -_backoff
+        return
 
-    yield from inner()
+    return (yield from inner())
 
 
 def grid_scan_nd(
@@ -477,4 +477,4 @@ def grid_scan_nd(
     plan = bp.grid_scan(detectors, *args, snake_axes=snake, per_step=_per_step, md=_md)
     plan = bpp.pchain(bps.mv(shutter, shutter_open), bps.sleep(shutter_wait_open), plan)
     plan = bpp.finalize_wrapper(plan, bps.mv(shutter, shutter_close))
-    yield from plan
+    return (yield from plan)

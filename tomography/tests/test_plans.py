@@ -1,8 +1,17 @@
 from bluesky import RunEngine
+from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.simulators import summarize_plan
 
 import tomography.sim as sim
 import tomography.plans as plans
+
+_run_RE = True
+if _run_RE:
+    bec = BestEffortCallback()
+    bec.disable_plots()
+    bec.disable_baseline()
+    RE = RunEngine()
+    RE.subscribe(bec, "all")
 
 
 def test_fly_scan_2d():
@@ -20,7 +29,10 @@ def test_fly_scan_2d():
         shutter_wait_close=0., shutter_wait_open=0.
     )
 
-    summarize_plan(plan)
+    if _run_RE:
+        RE(plan)
+    else:
+        summarize_plan(plan)
 
 
 def test_fly_scan_3d():
@@ -39,8 +51,10 @@ def test_fly_scan_3d():
         time_per_point=1., time_per_frame=1., move_velocity=1., shutter=shutter, shutter_close=1, shutter_open=0.,
         shutter_wait_close=0., shutter_wait_open=0.
     )
-
-    summarize_plan(plan)
+    if _run_RE:
+        RE(plan)
+    else:
+        summarize_plan(plan)
 
 
 def test_grid_scan_2d():
@@ -58,4 +72,7 @@ def test_grid_scan_2d():
         shutter_wait_close=0., shutter_wait_open=0.
     )
 
-    summarize_plan(plan)
+    if _run_RE:
+        RE(plan)
+    else:
+        summarize_plan(plan)
