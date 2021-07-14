@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Run experiments at NSLS-II &mdash; tomography 0.post1+gd77ef7e documentation</title>
+  <title>Run experiments at NSLS-II &mdash; tomography 0.post1+gd28f50f documentation</title>
   
 
   
@@ -45,7 +45,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Example: Process streaming data" href="process_streaming_data.html" />
+    <link rel="next" title="Process streaming data using the peak tracking method" href="process_streaming_data.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -70,7 +70,7 @@
             
             
               <div class="version">
-                0.post1+gd77ef7e
+                0.post1+gd28f50f
               </div>
             
           
@@ -104,14 +104,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#fly-scan-in-rocking-curves-on-a-grid">Fly scan in rocking curves on a grid</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#grid-scan">Grid scan</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#grid-scan-in-x-y-plane">Grid scan in (x, y) plane</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#grid-scan">Grid scan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#grid-scan-in-x-y-plane">Grid scan in (x, y) plane</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#grid-scan-in-phi-x-y-space">Grid scan in (phi, x, y) space</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="process_streaming_data.html">Example: Process streaming data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process_streaming_data.html">Process streaming data using the peak tracking method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
 </ul>
 
@@ -522,9 +522,8 @@ grid_scan_nd(detectors: list, *args, snake: Union[list, bool] = None, time_per_p
         Wrong motor positions format.
 </pre></div>
 </div>
-</div>
 <div class="section" id="grid-scan-in-x-y-plane">
-<h2>Grid scan in (x, y) plane<a class="headerlink" href="#grid-scan-in-x-y-plane" title="Permalink to this headline">¶</a></h2>
+<h3>Grid scan in (x, y) plane<a class="headerlink" href="#grid-scan-in-x-y-plane" title="Permalink to this headline">¶</a></h3>
 <p>Below is an example to do grid scan in rows.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plan</span> <span class="o">=</span> <span class="n">plans</span><span class="o">.</span><span class="n">grid_scan_nd</span><span class="p">(</span>
     <span class="p">[</span><span class="n">detector</span><span class="p">],</span>
@@ -609,6 +608,7 @@ grid_scan_nd(detectors: list, *args, snake: Union[list, bool] = None, time_per_p
 </pre></div>
 </div>
 <img alt="_images/experiment1_25_0.png" src="_images/experiment1_25_0.png" />
+</div>
 <div class="section" id="grid-scan-in-phi-x-y-space">
 <h3>Grid scan in (phi, x, y) space<a class="headerlink" href="#grid-scan-in-phi-x-y-space" title="Permalink to this headline">¶</a></h3>
 <p>We can use arbitrary number of the motors in a grid scan. Here, we show
@@ -660,7 +660,7 @@ there is a scan at three points along phi axis.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="process_streaming_data.html" class="btn btn-neutral float-right" title="Example: Process streaming data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="process_streaming_data.html" class="btn btn-neutral float-right" title="Process streaming data using the peak tracking method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
