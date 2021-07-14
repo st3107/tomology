@@ -1,5 +1,5 @@
-Example: Process streaming data
-===============================
+Process streaming data using the peak tracking method
+=====================================================
 
 Here, we show an example to process the streaming data. The streaming
 data is obtained from the database and we will use ``databroker`` as the

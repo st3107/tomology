@@ -384,7 +384,7 @@ Please read the document below about the syntax of the function.
 
 
 Grid scan in (x, y) plane
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Below is an example to do grid scan in rows.
 
