@@ -5,7 +5,7 @@ from bluesky.simulators import summarize_plan
 import tomography.sim as sim
 import tomography.plans as plans
 
-_run_RE = True
+_run_RE = False
 if _run_RE:
     bec = BestEffortCallback()
     bec.disable_plots()
