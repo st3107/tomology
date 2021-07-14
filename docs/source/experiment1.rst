@@ -43,7 +43,7 @@ Please the document of the function to know the syntax.
     help(plans.fly_scan_nd)
 
 
-.. parsed-literal::
+::
 
     Help on function fly_scan_nd in module tomography.plans:
     
@@ -174,7 +174,7 @@ dark frame.
     bss.summarize_plan(copys[0])
 
 
-.. parsed-literal::
+::
 
     image_cam_acquire_time -> 1.0
     image_images_per_set -> 1
@@ -298,12 +298,6 @@ scan in the phi axis.
     plt.show()
 
 
-.. parsed-literal::
-
-    *** all positions for phi_velocity are relative to current position ***
-
-
-
 .. image:: _static/experiment1_16_1.png
 
 
@@ -321,7 +315,7 @@ Please read the document below about the syntax of the function.
     help(plans.grid_scan_nd)
 
 
-.. parsed-literal::
+::
 
     Help on function grid_scan_nd in module tomography.plans:
     
@@ -433,7 +427,7 @@ We print out the details of the plans.
     bss.summarize_plan(copys[0])
 
 
-.. parsed-literal::
+::
 
     image_cam_acquire_time -> 1.0
     image_images_per_set -> 1

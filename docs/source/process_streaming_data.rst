@@ -114,7 +114,7 @@ callback function in last section. An example script is show here.
     !cat server.py
 
 
-.. parsed-literal::
+::
 
     import numpy as np
     from databroker import Broker
