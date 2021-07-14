@@ -414,21 +414,21 @@ def grid_scan_nd(
     Returns
     -------
     typing.Generic
-        [description]
+        The generator of the plan.
 
     Yields
     -------
     Iterator[typing.Generic]
-        [description]
+        The messages of the plan.
 
     Raises
     ------
     TomoPlanError
-        [description]
+        Empty detector list.
     TomoPlanError
-        [description]
+        Not enough motors.
     TomoPlanError
-        [description]
+        Wrong motor positions format.
     """
     if not md:
         md = {}
