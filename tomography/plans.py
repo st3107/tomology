@@ -122,7 +122,8 @@ def dark_plan(detector):
 
 
 def _get_motors_and_coords(starts, ends, nums) -> np.ndarray:
-    """Get the motors and coordinates of the motors, like [[motor1_pos1, motor2_pos1, ...], [motor1_pos2, motor2_pos2, ...], ...]
+    """Get the motors and coordinates of the motors, like [[motor1_pos1, motor2_pos1, ...],
+    [motor1_pos2, motor2_pos2, ...], ...].
 
     Returns
     -------
@@ -160,7 +161,14 @@ def fly_scan_nd(
 ) -> typing.Generic:
     """Move on a grid and do a fly scan at each point in the grid.
 
-    For example, `fly_scan_nd([detector], motor_y, 0, 10, 11, motor_x, 0, 20, 21, motor_fly, 0, 5, 6, time_per_point=10, time_per_frame=1, shutter=shutter, shutter_open=1, shutter_close=0, shutter_wait_open=2, shutter_wait_close=5, move_velocity=5, take_dark=True, md={"task": "fly scan sample 1", backoff=0.5, snake=False})` means that
+    For example, `fly_scan_nd([detector], motor_y, 0, 10, 11,
+    motor_x, 0, 20, 21, motor_fly, 0, 5, 6,
+    time_per_point=10, time_per_frame=1, shutter=shutter,
+    shutter_open=1, shutter_close=0,
+    shutter_wait_open=2, shutter_wait_close=5,
+    move_velocity=5, take_dark=True,
+    md={"task": "fly scan sample 1", backoff=0.5, snake=False})`
+    means that
 
     set detector so that it will collect one image for 10 s
     one image contains 10 frames and each frame for 1 s
@@ -173,12 +181,13 @@ def fly_scan_nd(
             wait 2 s
             fly scan the motor_fly from -0.5 to 5.5
             collect 6 images during the fly
-            close shutter          
+            close shutter
 
     Parameters
     ----------
     detectors : list
-        A list of detectors. The first one must be an area detector. The list shouldn't include the motors in the `args`.
+        A list of detectors. The first one must be an area detector. The list shouldn't include the motors in the
+        `args`.
     *args :
         patterned like (``motor1, start1, stop1, num1,``
                         ``motor2, start2, stop2, num2,``
@@ -239,7 +248,8 @@ def fly_scan_nd(
         raise TomoPlanError("dets cannot be an empty list.")
     if len(args) < 8:
         raise TomoPlanError(
-            "There must be at least 8 arguments for the motors, like ``motor1, start1, end1, number1, motor2, start2, end2, number2`.")
+            "There must be at least 8 arguments for the motors, like ``motor1, start1, end1, number1, motor2, "
+            "start2, end2, number2`.")
     if len(args) % 4 != 0:
         raise TomoPlanError(
             "The arguments must be in format `motor1, start1, end1, number1, motor2, start2, end2, number2, ...`")
