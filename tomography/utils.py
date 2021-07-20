@@ -280,7 +280,7 @@ def create_dataset(maps: xr.DataArray, windows: pd.DataFrame, metadata: dict, in
 
 def reshape_to_matrix(arr: np.ndarray, metadata: dict) -> np.ndarray:
     if "shape" not in metadata:
-        raise KeyError("Missing key '' in metadata.".format("shape"))
+        raise KeyError("Missing key '{}' in metadata.".format("shape"))
     reshaped = np.apply_along_axis(
         lambda x: _reshape(x, metadata["shape"], metadata.get("snaking", [])),
         0,
@@ -432,7 +432,7 @@ def track_peaks2(frames: xr.DataArray, windows: pd.DataFrame) -> np.ndarray:
     return np.stack(intensities).transpose()
 
 
-def summary_in_a_dataset(windows: pd.DataFrame):
+def summary_in_a_dataset(arr: xr.DataArray, windows: pd.DataFrame):
     # attach the arr to the data set
     ds: xr.Dataset = windows.reset_index(drop=True).to_xarray()
     dims = list(ds.dims.keys())
@@ -442,7 +442,7 @@ def summary_in_a_dataset(windows: pd.DataFrame):
 
 def reshape_to_ndarray(arr: np.ndarray, metadata: dict) -> np.ndarray:
     if "shape" not in metadata:
-        raise CalculatorError("Missing key '' in metadata.".format("shape"))
+        raise CalculatorError("Missing key '{}' in metadata.".format("shape"))
     shape = list(arr.shape)[:-1]
     shape.extend(metadata["shape"])
     arr: np.ndarray = arr.reshape(shape)
