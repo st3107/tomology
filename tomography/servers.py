@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 from configparser import ConfigParser
 
+import fire
 import event_model as em
 from bluesky.callbacks.zmq import RemoteDispatcher
 from bluesky.callbacks.core import CallbackBase
@@ -44,6 +45,25 @@ class ServerConfig:
     def name(self) -> str:
         return self.parser.get("SERVER", "name")
 
+    @name.setter
+    def name(self, value: str) -> None:
+        self.parser.set("SERVER", "name", value)
+        return
+
+    def read(self, cfg_file: str) -> None:
+        path = Path(cfg_file).expanduser()
+        if not path.is_file():
+            raise FileNotFoundError("No such a file '{}'.".format(cfg_file))
+        self.parser.read(cfg_file)
+
+    def write(self, cfg_file: str) -> None:
+        path = Path(cfg_file)
+        path = path.expanduser()
+        if path.is_file():
+            raise FileExistsError("File '{}' exists.".format(cfg_file))
+        with path.open("w") as f:
+            self.parser.write(f)
+
 
 class ServerBase:
 
@@ -69,6 +89,7 @@ class ExtremumConfig(ServerConfig):
         super().__init__()
         self.start = None
         self.event = None
+        self.name = "extremum"
         self.parser.add_section("EXTREMUM")
         section = self.parser["EXTREMUM"]
         section["data_key"] = "dexela_image"
@@ -163,3 +184,23 @@ class ExtremumServer(ServerBase):
         super().__init__(config)
         self.extremum = Extremum(config)
         self.dispatcher.subscribe(self.extremum)
+
+
+class Servers:
+
+    def run_extremum(self, cfg_file: str, test: bool = False) -> None:
+        config = ExtremumConfig()
+        config.read(cfg_file)
+        server = ExtremumServer(config)
+        if not test:
+            server.run()
+        return
+
+    def create_extremum_config(self, cfg_file: str) -> None:
+        config = ExtremumConfig()
+        config.write(cfg_file)
+        return
+
+
+if __name__ == "__main__":
+    fire.Fire(Servers)

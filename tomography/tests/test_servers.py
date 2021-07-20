@@ -39,3 +39,13 @@ def test_Extremum(tmpdir):
     assert np.array_equal(arr2, np.zeros(shape2, float))
     assert np.array_equal(arr3, np.zeros(shape2, float))
     assert np.array_equal(arr4, np.ones(shape2, float))
+
+
+def test_ExtremumServer(tmpdir):
+    """Test if it can write and read the cfg file"""
+    base = Path(str(tmpdir))
+    ss = servers.Servers()
+    cfg_file = base.joinpath("test.ini")
+    ss.create_extremum_config(str(cfg_file))
+    print(cfg_file.read_text())
+    ss.run_extremum(str(cfg_file), test=False)
