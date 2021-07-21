@@ -135,3 +135,11 @@ def test_Calculator_2():
     c.show_intensity(real_aspect=True)
     plt.show(block=False)
     plt.clf()
+
+
+def test_Calculator_3():
+    c = utils.Calculator()
+    c.windows = pd.DataFrame([[1, 0, 0, 0], [0, 0, 0, 0], [1, 0, 1, 0]], columns=["y", "dy", "x", "dx"])
+    c.ai = utils.AzimuthalIntegrator(detector="Perkin", wavelength=2 * np.pi)
+    c.assign_q_values()
+    print(c.windows)

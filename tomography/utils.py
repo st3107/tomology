@@ -314,7 +314,8 @@ def reshape_to_xarray(arr: xr.DataArray, metadata: dict) -> xr.DataArray:
 def reformat_data(ds: xr.Dataset) -> xr.Dataset:
     """Reformat the data loaded from the databroker."""
     frames = np.arange(0, ds["time"].shape[0], 1)
-    return ds.rename_dims({"time": "frame"}).reset_index("time").drop("time_").assign_coords({"frame": frames})
+    return ds.rename_dims({"time": "frame"}).reset_index("time").drop_vars("time_").assign_coords(
+        {"frame": frames})
 
 
 def draw_windows(df: pd.DataFrame, ax: plt.Axes) -> None:
@@ -538,25 +539,31 @@ class Calculator(object):
         self.coords: typing.Union[None, typing.List[np.ndarray]] = None
         # keys: shape, extents, snaking
         self.metadata: typing.Union[None, dict] = None
+        # pyFAI
+        self.ai: typing.Union[None, AzimuthalIntegrator] = None
 
     def _check_attr(self, name: str):
         if getattr(self, name) is None:
             raise CalculatorError("Attribute '{}' is None. Please set it.".format(name))
 
     def calc_dark_and_light_from_frames_arr(self):
+        """Get the light and dark frame in a series of frames."""
         self._check_attr("frames_arr")
         self.dark, self.light = min_and_max_along_time2(self.frames_arr)
 
     def calc_peaks_from_light_frame(self, diameter: typing.Union[int, tuple], *args, **kwargs):
+        """Get the Bragg peaks on the light frame."""
         self._check_attr("light")
         self.peaks = tp.locate(self.light, diameter, *args, **kwargs)
 
     def calc_windows_from_peaks(self, num: int, width: int):
+        """Gte the windows for the most brightest Bragg peaks."""
         self._check_attr("peaks")
         df = self.peaks.sort_values("mass", ascending=False)[:num]
         self.windows = create_windows_from_width2(df, width)
 
     def calc_intensity_in_windows(self):
+        """Get the intensity array as a function of index of frames."""
         self._check_attr("frames_arr")
         self._check_attr("windows")
         self.intensity = track_peaks2(self.frames_arr, self.windows)
@@ -566,7 +573,14 @@ class Calculator(object):
         else:
             my_print("Attribute 'dark' is None. No background correction.")
 
+    def assign_q_values(self):
+        """Assign the values to the windows dataframe."""
+        self._check_attr("ai")
+        self._check_attr("windows")
+        self.windows["Q"] = self.ai.qFunction(self.windows["x"], self.windows["y"])
+
     def reshape_intensity(self):
+        """Reshape the intensity array."""
         self._check_attr("metadata")
         self._check_attr("intensity")
         self.intensity = reshape_to_ndarray(self.intensity, self.metadata)
