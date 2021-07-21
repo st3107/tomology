@@ -212,9 +212,20 @@ class BestEffortServer(ServerBase):
         self.dispatcher.subscribe(li)
 
 
-class Servers:
+class Commands:
+    """A collection of commands.
+    """
 
     def run_extremum(self, cfg_file: str, test: bool = False) -> None:
+        """Run extremum server.
+
+        Parameters
+        ----------
+        cfg_file : str
+            The configuration file. It is an .ini file.
+        test : bool, optional
+            If True, it is a pytest mode, by default False.
+        """
         config = ExtremumConfig()
         config.read(cfg_file)
         server = ExtremumServer(config)
@@ -223,6 +234,15 @@ class Servers:
         return
 
     def run_best_effort(self, cfg_file: str, test: bool = False) -> None:
+        """Run best effort server.
+
+        Parameters
+        ----------
+        cfg_file : str
+            The configuration file. It is an .ini file.
+        test : bool, optional
+            If True, it is a pytest mode, by default False.
+        """
         config = BestEffortConfig()
         config.read(cfg_file)
         server = BestEffortServer(config)
@@ -231,15 +251,41 @@ class Servers:
         return
 
     def create_extremum_config(self, cfg_file: str) -> None:
+        """Create the configuration file for extremum server.
+
+        Parameters
+        ----------
+        cfg_file : str
+            The configuration file. It is an .ini file.
+        """
         config = ExtremumConfig()
         config.write(cfg_file)
         return
 
     def create_best_effort_config(self, cfg_file: str) -> None:
+        """Create the configuration file for best efforts server.
+
+        Parameters
+        ----------
+        cfg_file : str
+            The configuration file. It is an .ini file.
+        """
         config = BestEffortConfig()
         config.write(cfg_file)
         return
 
 
+def run_cli():
+    c = Commands()
+    fire.Fire(
+        {
+            "run_extremum": c.run_extremum,
+            "run_best_effort": c.run_best_effort,
+            "create_extremum_config": c.create_extremum_config,
+            "create_best_effort_config": c.create_best_effort_config
+        }
+    )
+
+
 if __name__ == "__main__":
-    fire.Fire(Servers)
+    run_cli()
