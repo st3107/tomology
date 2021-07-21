@@ -387,7 +387,9 @@ def create_grain_maps(frames: xr.DataArray, windows: pd.DataFrame, metadata: dic
     return create_dataset(maps, windows, metadata, inverted=inverted)
 
 
-def select_frames(image_sum_data: xr.DataArray, metadata: dict, start_row: int = 0, end_row: int = None, **kwargs) -> None:
+def select_frames(
+    image_sum_data: xr.DataArray, metadata: dict, start_row: int = 0, end_row: int = None, **kwargs
+) -> None:
     """Select the frames according to the summation of the intensity on the image."""
     image_sum_matrix = reshape_to_xarray(image_sum_data, metadata)
     kwargs.setdefault("size", 8)
