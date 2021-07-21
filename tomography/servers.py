@@ -7,6 +7,8 @@ import fire
 import event_model as em
 from bluesky.callbacks.zmq import RemoteDispatcher
 from bluesky.callbacks.core import CallbackBase
+from bluesky.callbacks.best_effort import BestEffortCallback
+from bluesky.callbacks.broker import LiveImage
 import numpy as np
 
 
@@ -180,10 +182,34 @@ class Extremum(CallbackBase):
 
 class ExtremumServer(ServerBase):
 
-    def __init__(self, config):
+    def __init__(self, config: ExtremumConfig):
         super().__init__(config)
-        self.extremum = Extremum(config)
-        self.dispatcher.subscribe(self.extremum)
+        extremum = Extremum(config)
+        self.dispatcher.subscribe(extremum)
+
+
+class BestEffortConfig(ServerConfig):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "best_effort"
+        section = "BEST EFFORT"
+        self.parser.add_section(section)
+        self.parser.set(section, "image_key", "dexela_image")
+
+    @property
+    def image_key(self):
+        return self.parser.get("BEST EFFORT", "image_key")
+
+
+class BestEffortServer(ServerBase):
+
+    def __init__(self, config: BestEffortConfig):
+        super().__init__(config)
+        bec = BestEffortCallback()
+        li = LiveImage(config.image_key)
+        self.dispatcher.subscribe(bec)
+        self.dispatcher.subscribe(li)
 
 
 class Servers:
@@ -196,8 +222,21 @@ class Servers:
             server.run()
         return
 
+    def run_best_effort(self, cfg_file: str, test: bool = False) -> None:
+        config = BestEffortConfig()
+        config.read(cfg_file)
+        server = BestEffortServer(config)
+        if not test:
+            server.run()
+        return
+
     def create_extremum_config(self, cfg_file: str) -> None:
         config = ExtremumConfig()
+        config.write(cfg_file)
+        return
+
+    def create_best_effort_config(self, cfg_file: str) -> None:
+        config = BestEffortConfig()
         config.write(cfg_file)
         return
 

@@ -45,7 +45,16 @@ def test_ExtremumServer(tmpdir):
     """Test if it can write and read the cfg file"""
     base = Path(str(tmpdir))
     ss = servers.Servers()
-    cfg_file = base.joinpath("test.ini")
+    cfg_file = base.joinpath("test_extremum.ini")
     ss.create_extremum_config(str(cfg_file))
     print(cfg_file.read_text())
-    ss.run_extremum(str(cfg_file), test=False)
+    ss.run_extremum(str(cfg_file), test=True)
+
+
+def test_BestEffortServer(tmpdir):
+    base = Path(str(tmpdir))
+    ss = servers.Servers()
+    cfg_file = base.joinpath("test_best_effort.ini")
+    ss.create_best_effort_config(str(cfg_file))
+    print(cfg_file.read_text())
+    ss.run_best_effort(str(cfg_file), test=True)
