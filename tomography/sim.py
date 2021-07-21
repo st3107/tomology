@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 from ophyd import Device, Component, Kind
 from ophyd.sim import DirectImage, SynSignal, SynAxis
