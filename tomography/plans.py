@@ -1,15 +1,15 @@
+import itertools
 import math
-
+import time
 import typing
 import uuid
 
-import numpy as np
-import itertools
-import bluesky.preprocessors as bpp
 import bluesky.plan_stubs as bps
-from bluesky.utils import short_uid
 import bluesky.plans as bp
-
+import bluesky.preprocessors as bpp
+import numpy as np
+import ophyd
+from bluesky.utils import short_uid
 from ophyd import Signal, Kind
 
 
@@ -488,3 +488,12 @@ def grid_scan_nd(
     plan = bpp.pchain(bps.mv(shutter, shutter_open), bps.sleep(shutter_wait_open), plan)
     plan = bpp.finalize_wrapper(plan, bps.mv(shutter, shutter_close))
     return (yield from plan)
+
+
+def loop_until(motor: ophyd.Device, left: float, right: float, t: float) -> typing.Generic:
+    """Move motor from left to right and right to left repeatedly until t seconds pass"""
+    t0 = time.time()
+    while time.time() - t0 < t:
+        yield from bps.mv(motor, left)
+        yield from bps.mv(motor, right)
+    return

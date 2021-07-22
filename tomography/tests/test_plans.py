@@ -2,8 +2,8 @@ from bluesky import RunEngine
 from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.simulators import summarize_plan
 
-import tomography.sim as sim
 import tomography.plans as plans
+import tomography.sim as sim
 
 _run_RE = False
 if _run_RE:
@@ -76,3 +76,9 @@ def test_grid_scan_2d():
         RE(plan)
     else:
         summarize_plan(plan)
+
+
+def test_loop_until():
+    motor_x = sim.DelayedSynAxis(name="motor_x")
+    motor_x.configure({"velocity": 10.})
+    plans.loop_until(motor_x, 0, 1, 0.2)
