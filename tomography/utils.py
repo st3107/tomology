@@ -559,7 +559,7 @@ class Calculator(object):
     def calc_windows_from_peaks(self, num: int, width: int):
         """Gte the windows for the most brightest Bragg peaks."""
         self._check_attr("peaks")
-        df = self.peaks.sort_values("mass", ascending=False)[:num]
+        df = self.peaks.nlargest(num, "mass")
         self.windows = create_windows_from_width2(df, width)
 
     def calc_intensity_in_windows(self):
