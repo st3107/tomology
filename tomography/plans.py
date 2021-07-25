@@ -297,7 +297,7 @@ def fly_scan_nd(
     # soft signal to use for tracking pixel edges
     px_start = Signal(name=f"start_{fly_motor.name}", kind=Kind.normal)
     px_stop = Signal(name=f"stop_{fly_motor.name}", kind=Kind.normal)
-    all_dets = detectors + [px_start, px_stop, fly_motor.velocity]
+    all_dets = detectors + [px_start, px_stop, fly_motor.velocity] + list(motors)
     # or get the gating working below.
     speed = abs(fly_stop - fly_start) / (fly_pixels * computed_dwell_time)
     # check the speed
