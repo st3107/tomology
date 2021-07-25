@@ -115,7 +115,11 @@ class ExtremumConfig(ServerConfig):
 
     @property
     def directory(self) -> Path:
-        return Path(self.parser.get("EXTREMUM", "directory").format(start=self.start))
+        try:
+            return Path(self.parser.get("EXTREMUM", "directory").format(start=self.start))
+        except e:
+            print(self.start)
+            raise e
 
     @property
     def max_directory(self) -> Path:
