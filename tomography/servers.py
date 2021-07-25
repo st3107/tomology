@@ -1,15 +1,19 @@
 import typing
-from pathlib import Path
-from datetime import datetime
 from configparser import ConfigParser
+from datetime import datetime
+from pathlib import Path
 
-import fire
 import event_model as em
-from bluesky.callbacks.zmq import RemoteDispatcher
-from bluesky.callbacks.core import CallbackBase
+import fire
+import numpy as np
 from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.callbacks.broker import LiveImage
-import numpy as np
+from bluesky.callbacks.core import CallbackBase
+from bluesky.callbacks.zmq import RemoteDispatcher
+from bluesky.utils import install_kicker
+from databroker.core import discover_handlers
+
+_HANDLERS = discover_handlers()
 
 
 def myprint(*args, **kwargs) -> None:
@@ -26,7 +30,7 @@ class ServerConfig:
         self.parser.add_section("SERVER")
         section = self.parser["SERVER"]
         section["host"] = "localhost"
-        section["port"] = "5567"
+        section["port"] = "5568"
         section["prefix"] = "raw"
         section["verbose"] = "1"
         section["name"] = "unnamed"
@@ -69,9 +73,12 @@ class ServerConfig:
 
 class ServerBase:
 
-    def __init__(self, config: ServerConfig):
+    def __init__(self, config: ServerConfig, callbacks: list):
         self.config = config
+        self.callbacks = callbacks
         self.dispatcher = RemoteDispatcher(config.address, prefix=config.prefix)
+        router = em.RunRouter([lambda *x: (callbacks, [])], handler_registry=_HANDLERS)
+        self.dispatcher.subscribe(router)
 
     def print(self, *args, **kwargs) -> None:
         if self.config.verbose > 0:
@@ -183,9 +190,8 @@ class Extremum(CallbackBase):
 class ExtremumServer(ServerBase):
 
     def __init__(self, config: ExtremumConfig):
-        super().__init__(config)
         extremum = Extremum(config)
-        self.dispatcher.subscribe(extremum)
+        super().__init__(config, [extremum])
 
 
 class BestEffortConfig(ServerConfig):
@@ -205,11 +211,10 @@ class BestEffortConfig(ServerConfig):
 class BestEffortServer(ServerBase):
 
     def __init__(self, config: BestEffortConfig):
-        super().__init__(config)
         bec = BestEffortCallback()
         li = LiveImage(config.image_key)
-        self.dispatcher.subscribe(bec)
-        self.dispatcher.subscribe(li)
+        super().__init__(config, [bec, li])
+        install_kicker(self.dispatcher.loop)
 
 
 class Commands:
