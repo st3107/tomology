@@ -524,6 +524,16 @@ def show_npy_array(folder: str, index: int, **kwargs) -> xr.DataArray:
     return arr
 
 
+def show_tiff_array(folder: str, index: int, **kwargs) -> xr.DataArray:
+    folder = pathlib.Path(folder)
+    fs = list(folder.glob("*.tiff"))
+    f = str(fs[index])
+    arr = xr.DataArray(fabio.openimage.open(f).data)
+    plt.clf()
+    arr.plot(**kwargs)
+    return arr
+
+
 class CalculatorError(Exception):
     pass
 
