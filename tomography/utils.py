@@ -519,7 +519,6 @@ def show_npy_array(template: str, index: int, **kwargs):
     arr = xr.DataArray(np.load(f))
     ax = plt.cla()
     arr.plot(**kwargs, ax=ax)
-    ax = plt.gca()
     ax.set_title(f)
     set_real_aspect(ax)
     plt.show()
