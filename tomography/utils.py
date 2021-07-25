@@ -1,5 +1,4 @@
 import math
-import pathlib
 import typing
 
 import matplotlib.patches as patches
@@ -515,10 +514,8 @@ def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
     return [np.linspace(*extent, num) for extent, num in zip(extents, shape)]
 
 
-def show_npy_array(folder: str, index: int, **kwargs):
-    folder = pathlib.Path(folder)
-    fs = sorted(list(folder.glob("*.npy")), reverse=True)
-    f = str(fs[index])
+def show_npy_array(template: str, index: int, **kwargs):
+    f = template.format(index)
     arr = xr.DataArray(np.load(f))
     plt.cla()
     arr.plot(**kwargs)
@@ -528,10 +525,8 @@ def show_npy_array(folder: str, index: int, **kwargs):
     return
 
 
-def show_tiff_array(folder: str, index: int, **kwargs):
-    folder = pathlib.Path(folder)
-    fs = sorted(list(folder.glob("*.tiff")), reverse=True)
-    f = str(fs[index])
+def show_tiff_array(template: str, index: int, **kwargs):
+    f = template.format(index)
     arr = xr.DataArray(fabio.openimage.open(f).data)
     plt.cla()
     arr.plot(**kwargs)
