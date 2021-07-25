@@ -103,7 +103,7 @@ class ExtremumConfig(ServerConfig):
         self.parser.add_section("EXTREMUM")
         section = self.parser["EXTREMUM"]
         section["data_key"] = "dexela_image"
-        section["directory"] = "{start[sample_name]}_{start[uid][:6]}"
+        section["directory"] = "{start[sample_name]}_{start[uid]}"
         section["file_prefix"] = "{start[sample_name]}_{event[seq_num]}"
 
     def copy_start(self, start) -> None:
