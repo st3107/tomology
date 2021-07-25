@@ -12,6 +12,7 @@ from bluesky.callbacks.core import CallbackBase
 from bluesky.callbacks.zmq import RemoteDispatcher
 from bluesky.utils import install_kicker
 from databroker.core import discover_handlers
+from tifffile import TiffWriter
 
 _HANDLERS = discover_handlers()
 
@@ -117,6 +118,18 @@ class ExtremumConfig(ServerConfig):
         return Path(self.parser.get("EXTREMUM", "directory").format(start=self.start))
 
     @property
+    def max_directory(self) -> Path:
+        return self.directory.joinpath("max")
+
+    @property
+    def min_directory(self) -> Path:
+        return self.directory.joinpath("min")
+
+    @property
+    def tiff_directory(self) -> Path:
+        return self.directory.joinpath("tiff")
+
+    @property
     def file_prefix(self) -> str:
         return self.parser.get("EXTREMUM", "file_prefix").format(start=self.start, event=self.event)
 
@@ -124,13 +137,19 @@ class ExtremumConfig(ServerConfig):
     def min_path(self) -> Path:
         rendered = self.file_prefix.format(start=self.start, event=self.event)
         file_name = "{}_min".format(rendered)
-        return self.directory.joinpath(file_name).with_suffix(".npy")
+        return self.min_directory.joinpath(file_name).with_suffix(".npy")
 
     @property
     def max_path(self) -> Path:
         rendered = self.file_prefix.format(start=self.start, event=self.event)
         file_name = "{}_max".format(rendered)
-        return self.directory.joinpath(file_name).with_suffix(".npy")
+        return self.max_directory.joinpath(file_name).with_suffix(".npy")
+
+    @property
+    def tiff_path(self) -> Path:
+        rendered = self.file_prefix.format(start=self.start, event=self.event)
+        file_name = "{}_image".format(rendered)
+        return self.tiff_directory.joinpath(file_name).with_suffix(".tiff")
 
     @property
     def data_key(self) -> str:
@@ -157,6 +176,9 @@ class Extremum(CallbackBase):
         self.max = None
         self.config.copy_start(doc)
         self.config.directory.mkdir(parents=True, exist_ok=True)
+        self.config.min_directory.mkdir(parents=True, exist_ok=True)
+        self.config.max_directory.mkdir(parents=True, exist_ok=True)
+        self.config.tiff_directory.mkdir(parents=True, exist_ok=True)
         return
 
     def event_page(self, doc):
@@ -169,16 +191,18 @@ class Extremum(CallbackBase):
         seq_num = doc.get("seq_num", 0)
         self.print("Process event {}.".format(seq_num))
         frames = doc.get("data", {}).get(self.config.data_key, None)
-        frames_np = np.asanyarray(frames)
-        image = np.mean(frames_np, axis=0)
-        if image is None:
+        if frames is None:
             date_key = self.config.data_key
             self.print("No {} data in the event {}.".format(date_key, seq_num))
             return
+        frames_np = np.asarray(frames)
+        image = np.mean(frames_np, axis=0, dtype=frames_np.dtype)
         self.min = np.fmin(self.min, image) if self.min is not None else image
         self.max = np.fmax(self.max, image) if self.max is not None else image
-        np.save(self.config.min_path, self.min)
-        np.save(self.config.max_path, self.max)
+        np.save(str(self.config.min_path), self.min)
+        np.save(str(self.config.max_path), self.max)
+        tw = TiffWriter(str(self.config.tiff_path))
+        tw.write(image)
         return
 
     def stop(self, doc):

@@ -23,10 +23,10 @@ def test_Extremum(tmpdir):
     for name, doc in stream:
         extremum(name, doc)
     # check the files
-    file1 = base.joinpath("A_1_min.npy")
-    file2 = base.joinpath("A_1_max.npy")
-    file3 = base.joinpath("A_2_min.npy")
-    file4 = base.joinpath("A_2_max.npy")
+    file1 = base.joinpath("min").joinpath("A_1_min.npy")
+    file2 = base.joinpath("max").joinpath("A_1_max.npy")
+    file3 = base.joinpath("min").joinpath("A_2_min.npy")
+    file4 = base.joinpath("max").joinpath("A_2_max.npy")
     for f in (file1, file2, file3, file4):
         assert f.is_file
     # check the output
@@ -35,10 +35,10 @@ def test_Extremum(tmpdir):
     arr3 = np.load(file3)
     arr4 = np.load(file4)
     shape2 = (3, 3)
-    assert np.array_equal(arr1, np.zeros(shape2, float))
-    assert np.array_equal(arr2, np.zeros(shape2, float))
-    assert np.array_equal(arr3, np.zeros(shape2, float))
-    assert np.array_equal(arr4, np.ones(shape2, float))
+    assert np.array_equal(arr1, np.zeros(shape2, int))
+    assert np.array_equal(arr2, np.zeros(shape2, int))
+    assert np.array_equal(arr3, np.zeros(shape2, int))
+    assert np.array_equal(arr4, np.ones(shape2, int))
 
 
 def test_ExtremumServer(tmpdir):
