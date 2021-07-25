@@ -517,7 +517,7 @@ def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
 
 def show_npy_array(folder: str, index: int, **kwargs):
     folder = pathlib.Path(folder)
-    fs = list(folder.glob("*.npy"))
+    fs = sorted(list(folder.glob("*.npy")), reverse=True)
     f = str(fs[index])
     arr = xr.DataArray(np.load(f))
     plt.cla()
@@ -530,7 +530,7 @@ def show_npy_array(folder: str, index: int, **kwargs):
 
 def show_tiff_array(folder: str, index: int, **kwargs):
     folder = pathlib.Path(folder)
-    fs = list(folder.glob("*.tiff"))
+    fs = sorted(list(folder.glob("*.tiff")), reverse=True)
     f = str(fs[index])
     arr = xr.DataArray(fabio.openimage.open(f).data)
     plt.cla()
