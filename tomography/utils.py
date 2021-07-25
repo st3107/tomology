@@ -515,23 +515,28 @@ def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
     return [np.linspace(*extent, num) for extent, num in zip(extents, shape)]
 
 
-def show_npy_array(folder: str, index: int, **kwargs) -> xr.DataArray:
+def show_npy_array(folder: str, index: int, **kwargs):
     folder = pathlib.Path(folder)
     fs = list(folder.glob("*.npy"))
-    arr = xr.DataArray(np.load(str(fs[index])))
-    plt.clf()
+    f = str(fs[index])
+    arr = xr.DataArray(np.load(f))
+    plt.cla()
     arr.plot(**kwargs)
-    return arr
+    ax = plt.gca()
+    ax.set_title(f)
+    return folder, index
 
 
-def show_tiff_array(folder: str, index: int, **kwargs) -> xr.DataArray:
+def show_tiff_array(folder: str, index: int, **kwargs):
     folder = pathlib.Path(folder)
     fs = list(folder.glob("*.tiff"))
     f = str(fs[index])
     arr = xr.DataArray(fabio.openimage.open(f).data)
-    plt.clf()
+    plt.cla()
     arr.plot(**kwargs)
-    return arr
+    ax = plt.gca()
+    ax.set_title(f)
+    return folder, index
 
 
 class CalculatorError(Exception):
