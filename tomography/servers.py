@@ -190,6 +190,7 @@ class Extremum(CallbackBase):
         self.config.min_directory.mkdir(parents=True, exist_ok=True)
         self.config.max_directory.mkdir(parents=True, exist_ok=True)
         self.config.tiff_directory.mkdir(parents=True, exist_ok=True)
+        self.print("Data will be save in {}.".format(str(self.config.directory)))
         return
 
     def descriptor(self, doc):
@@ -217,7 +218,6 @@ class Extremum(CallbackBase):
         image = np.mean(frames_np, axis=0, dtype=frames_np.dtype)
         self.min = np.fmin(self.min, image) if self.min is not None else image
         self.max = np.fmax(self.max, image) if self.max is not None else image
-        self.print("Save data in {}.".format(str(self.config.directory)))
         np.save(str(self.config.min_path), self.min)
         np.save(str(self.config.max_path), self.max)
         tw = TiffWriter(str(self.config.tiff_path))
