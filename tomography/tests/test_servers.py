@@ -28,7 +28,6 @@ def test_Extremum(tmpdir):
     file3 = base.joinpath("min").joinpath("A_2_min.npy")
     file4 = base.joinpath("max").joinpath("A_2_max.npy")
     for f in (file1, file2, file3, file4):
-        print(str(f))
         assert f.is_file()
     # check the output
     arr1 = np.load(file1)
