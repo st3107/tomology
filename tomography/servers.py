@@ -117,7 +117,7 @@ class ExtremumConfig(ServerConfig):
     def directory(self) -> Path:
         try:
             return Path(self.parser.get("EXTREMUM", "directory").format(start=self.start))
-        except e:
+        except Exception as e:
             print(self.start)
             raise e
 
