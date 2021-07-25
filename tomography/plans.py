@@ -294,14 +294,20 @@ def fly_scan_nd(
         "dimensions",
         [((f"start_{fly_motor.name}",), "primary")] + [((motor.name,), "primary") for motor in motors],
     )
-
     # soft signal to use for tracking pixel edges
     px_start = Signal(name=f"start_{fly_motor.name}", kind=Kind.normal)
     px_stop = Signal(name=f"stop_{fly_motor.name}", kind=Kind.normal)
     all_dets = detectors + [px_start, px_stop, fly_motor.velocity]
-
     # or get the gating working below.
     speed = abs(fly_stop - fly_start) / (fly_pixels * computed_dwell_time)
+    # check the speed
+    low, high = sorted(fly_motor.velocity.limits)
+    if speed < low or speed > high:
+        raise ValueError("The fly scan velocity is {}. ".format(speed) +
+                         "It is out of the range of the motor speed: ({}, {}).".format(low, high))
+    if move_velocity < low or move_velocity > high:
+        raise ValueError("The move velocity is {}. ".format(move_velocity) +
+                         "It is out of the range of the motor speed: ({}, {}).".format(low, high))
 
     @bpp.reset_positions_decorator([fly_motor.velocity])
     @bpp.set_run_key_decorator(f"xrd_map_{uuid.uuid4()}")
