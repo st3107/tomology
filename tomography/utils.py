@@ -517,7 +517,7 @@ def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
 def show_npy_array(template: str, index: int, **kwargs):
     f = template.format(index)
     arr = xr.DataArray(np.load(f))
-    ax = plt.cla()
+    ax = plt.gca()
     arr.plot(**kwargs, ax=ax)
     ax.set_title(f)
     set_real_aspect(ax)
@@ -528,7 +528,7 @@ def show_npy_array(template: str, index: int, **kwargs):
 def show_tiff_array(template: str, index: int, **kwargs):
     f = template.format(index)
     arr = xr.DataArray(fabio.openimage.open(f).data)
-    ax = plt.cla()
+    ax = plt.gca()
     arr.plot(**kwargs, ax=ax)
     ax.set_title(f)
     set_real_aspect(ax)
