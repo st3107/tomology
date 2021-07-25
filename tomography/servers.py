@@ -102,7 +102,8 @@ class ExtremumConfig(ServerConfig):
         self.name = "extremum"
         self.parser.add_section("EXTREMUM")
         section = self.parser["EXTREMUM"]
-        section["stream"] = "primary"
+        section["light_stream"] = "primary"
+        section["dark_stream"] = "dark"
         section["data_key"] = "dexela_image"
         section["directory"] = "{start[sample_name]}_{start[uid]}"
         section["file_prefix"] = "{start[sample_name]}_{event[seq_num]}"
@@ -116,7 +117,11 @@ class ExtremumConfig(ServerConfig):
 
     @property
     def stream(self) -> str:
-        return self.parser.get("EXTREMUM", "stream")
+        return self.parser.get("EXTREMUM", "light_stream")
+
+    @property
+    def dark(self) -> str:
+        return self.parser.get("EXTREMUM", "dark_stream")
 
     @property
     def directory(self) -> Path:
@@ -172,7 +177,9 @@ class Extremum(CallbackBase):
         self.config: ExtremumConfig = config
         self.min: np.ndarray = None
         self.max: np.ndarray = None
-        self.descriptor_uid: str = None
+        self.light_uid: str = None
+        self.dark_uid: str = None
+        self.dark_frame: np.ndarray = None
 
     def print(self, *args, **kwargs) -> None:
         if self.config.verbose > 0:
@@ -184,7 +191,9 @@ class Extremum(CallbackBase):
         self.print("Start processing (id: '{}').".format(uid))
         self.min = None
         self.max = None
-        self.descriptor_uid = None
+        self.light_uid = None
+        self.dark_uid = None
+        self.dark_frame = None
         self.config.copy_start(doc)
         self.config.directory.mkdir(parents=True, exist_ok=True)
         self.config.min_directory.mkdir(parents=True, exist_ok=True)
@@ -195,8 +204,11 @@ class Extremum(CallbackBase):
 
     def descriptor(self, doc):
         if doc.get("name", "") == self.config.stream:
-            self.print("Receive stream {}.".format(self.config.stream))
-            self.descriptor_uid = doc["uid"]
+            self.print("Receive {} stream.".format(self.config.stream))
+            self.light_uid = doc["uid"]
+        elif doc.get("name", "") == self.config.dark:
+            self.print("Receive {} stream.".format(self.config.dark))
+            self.dark_uid = doc["uid"]
 
     def event_page(self, doc):
         for event_doc in em.unpack_event_page(doc):
@@ -204,11 +216,8 @@ class Extremum(CallbackBase):
         return
 
     def event(self, doc):
-        if doc["descriptor"] != self.descriptor_uid:
-            return
         self.config.set_event(doc)
         seq_num = doc.get("seq_num", 0)
-        self.print("Process event {}.".format(seq_num))
         frames = doc.get("data", {}).get(self.config.data_key, None)
         if frames is None:
             date_key = self.config.data_key
@@ -216,12 +225,19 @@ class Extremum(CallbackBase):
             return
         frames_np = np.asarray(frames)
         image = np.mean(frames_np, axis=0, dtype=frames_np.dtype)
-        self.min = np.fmin(self.min, image) if self.min is not None else image
-        self.max = np.fmax(self.max, image) if self.max is not None else image
-        np.save(str(self.config.min_path), self.min)
-        np.save(str(self.config.max_path), self.max)
-        tw = TiffWriter(str(self.config.tiff_path))
-        tw.write(image)
+        if doc["descriptor"] == self.light_uid:
+            # dark subtraction
+            self.print("Process light event {}.".format(seq_num))
+            image = image - self.dark_frame if self.dark_frame is not None else image
+            self.min = np.fmin(self.min, image) if self.min is not None else image
+            self.max = np.fmax(self.max, image) if self.max is not None else image
+            np.save(str(self.config.min_path), self.min)
+            np.save(str(self.config.max_path), self.max)
+            tw = TiffWriter(str(self.config.tiff_path))
+            tw.write(image)
+        elif doc["descriptor"] == self.dark_uid:
+            self.print("Process dark event {}.".format(seq_num))
+            self.dark_frame = image
         return
 
     def stop(self, doc):
