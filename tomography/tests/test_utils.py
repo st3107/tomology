@@ -76,6 +76,8 @@ def test_Calculator_1():
     c = utils.Calculator()
 
     c.frames_arr = xr.DataArray([[[[1, 0], [0, 0]]], [[[0, 0], [1, 1]]]])
+    c.show_frame(0)
+    c.show_frame(1)
     c.calc_dark_and_light_from_frames_arr()
     expect0 = np.array([[0, 0], [0, 0]])
     expect1 = np.array([[1, 0], [1, 1]])

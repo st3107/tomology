@@ -644,6 +644,14 @@ class Calculator(object):
             ds = ds.merge(ds2)
         return ds
 
+    def show_frame(self, index: int) -> None:
+        self._check_attr("frames_arr")
+        frame = self.frames_arr[index].compute().mean(axis=0)
+        fig, ax = plt.subplots()
+        frame.plot(ax=ax)
+        set_real_aspect(ax)
+        return
+
     def show_dark(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("dark")
         facet = self.dark_to_xarray().plot(*args, **kwargs)
