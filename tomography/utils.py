@@ -521,6 +521,7 @@ def show_npy_array(template: str, index: int, **kwargs):
     arr.plot(**kwargs)
     ax = plt.gca()
     ax.set_title(f)
+    set_real_aspect(ax)
     plt.show()
     return
 
@@ -532,6 +533,7 @@ def show_tiff_array(template: str, index: int, **kwargs):
     arr.plot(**kwargs)
     ax = plt.gca()
     ax.set_title(f)
+    set_real_aspect(ax)
     plt.show()
     return
 
