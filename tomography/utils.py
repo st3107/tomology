@@ -411,11 +411,12 @@ def average_intensity(frame: np.ndarray, windows: pd.DataFrame) -> np.ndarray:
     elif frame.ndim > 2:
         n = frame.ndim - 2
         frame = frame.mean(axis=tuple(range(n)))
+    ny, nx = frame.shape
     # create tasks
     I_in_windows = []
     for row in windows.itertuples():
-        slice_y = slice(row.y - row.dy, row.y + row.dy + 1)
-        slice_x = slice(row.x - row.dx, row.x + row.dx + 1)
+        slice_y = slice(max(row.y - row.dy, 0), min(row.y + row.dy + 1, ny))
+        slice_x = slice(max(row.x - row.dx, 0), min(row.x + row.dx + 1, nx))
         I_in_window = np.mean(frame[slice_y, slice_x], dtype=frame.dtype)
         I_in_windows.append(I_in_window)
     return np.array(I_in_windows)
