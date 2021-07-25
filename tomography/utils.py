@@ -1,4 +1,5 @@
 import math
+import pathlib
 import typing
 
 import matplotlib.patches as patches
@@ -512,6 +513,15 @@ def get_coords2(start_doc: dict) -> typing.List[np.ndarray]:
     shape = start_doc["shape"]
     extents = [np.asarray(extent) for extent in start_doc["extents"]]
     return [np.linspace(*extent, num) for extent, num in zip(extents, shape)]
+
+
+def show_npy_array(folder: str, index: int, **kwargs) -> xr.DataArray:
+    folder = pathlib.Path(folder)
+    fs = list(folder.glob("*.npy"))
+    arr = xr.DataArray(np.load(str(fs[index])))
+    plt.clf()
+    arr.plot(**kwargs)
+    return arr
 
 
 class CalculatorError(Exception):
