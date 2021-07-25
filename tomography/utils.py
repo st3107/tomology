@@ -524,7 +524,8 @@ def show_npy_array(folder: str, index: int, **kwargs):
     arr.plot(**kwargs)
     ax = plt.gca()
     ax.set_title(f)
-    return folder, index
+    plt.show()
+    return
 
 
 def show_tiff_array(folder: str, index: int, **kwargs):
@@ -536,7 +537,8 @@ def show_tiff_array(folder: str, index: int, **kwargs):
     arr.plot(**kwargs)
     ax = plt.gca()
     ax.set_title(f)
-    return folder, index
+    plt.show()
+    return
 
 
 class CalculatorError(Exception):
