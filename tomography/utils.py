@@ -519,7 +519,7 @@ def show_npy_array(template: str, index: int, **kwargs):
     f = template.format(index)
     arr = xr.DataArray(np.load(f))
     ax = plt.gca()
-    arr.plot(**kwargs, ax=ax)
+    arr.plot.imshow(**kwargs, ax=ax)
     ax.set_title(f)
     set_real_aspect(ax)
     plt.show()
@@ -530,7 +530,7 @@ def show_tiff_array(template: str, index: int, **kwargs):
     f = template.format(index)
     arr = xr.DataArray(fabio.openimage.open(f).data)
     ax = plt.gca()
-    arr.plot(**kwargs, ax=ax)
+    arr.plot.imshow(**kwargs, ax=ax)
     ax.set_title(f)
     set_real_aspect(ax)
     plt.show()
@@ -649,26 +649,26 @@ class Calculator(object):
         self._check_attr("frames_arr")
         frame = self.frames_arr[index].compute().mean(axis=0)
         fig, ax = plt.subplots()
-        frame.plot(ax=ax)
+        frame.plot.imshow(ax=ax)
         set_real_aspect(ax)
         return
 
     def show_dark(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("dark")
-        facet = self.dark_to_xarray().plot(*args, **kwargs)
+        facet = self.dark_to_xarray().plot.imshow(*args, **kwargs)
         set_real_aspect(facet.axes)
         return facet
 
     def show_light(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("light")
-        facet = self.light_to_xarray().plot(*args, **kwargs)
+        facet = self.light_to_xarray().plot.imshow(*args, **kwargs)
         set_real_aspect(facet.axes)
         return facet
 
     def show_windows(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("light")
         self._check_attr("windows")
-        facet = self.light_to_xarray().plot(*args, **kwargs)
+        facet = self.light_to_xarray().plot.imshow(*args, **kwargs)
         set_real_aspect(facet.axes)
         draw_windows(self.windows, facet.axes)
         return facet
