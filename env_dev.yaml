@@ -9,4 +9,5 @@ dependencies:
   - databroker==1.2.3
   - databroker-pack==0.3.0
   - pyfai==0.20.0
-  - jupyterlab==3.0.11
+  - jupyterlab
+  - pip
