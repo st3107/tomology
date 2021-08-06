@@ -134,7 +134,7 @@ def test_Calculator_2():
     assert np.array_equal(c.coords[0], np.array([-1., 0.]))
     assert np.array_equal(c.coords[1], np.array([1., 3.]))
 
-    c.show_intensity(real_aspect=True)
+    c.show_intensity()
     plt.show(block=False)
     plt.clf()
 

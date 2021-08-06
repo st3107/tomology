@@ -30,10 +30,10 @@ def test_Extremum(tmpdir):
     for f in (file1, file2, file3, file4):
         assert f.is_file()
     # check the output
-    arr1 = np.load(file1)
-    arr2 = np.load(file2)
-    arr3 = np.load(file3)
-    arr4 = np.load(file4)
+    arr1 = np.load(str(file1))
+    arr2 = np.load(str(file2))
+    arr3 = np.load(str(file3))
+    arr4 = np.load(str(file4))
     shape2 = (3, 3)
     assert np.array_equal(arr1, np.zeros(shape2, int))
     assert np.array_equal(arr2, np.zeros(shape2, int))

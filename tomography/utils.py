@@ -210,6 +210,16 @@ def set_real_aspect(axes: typing.Union[plt.Axes, typing.Iterable[plt.Axes]]) -> 
     return
 
 
+def invert_yaxis(axes: typing.Union[plt.Axes, typing.Iterable[plt.Axes]]) -> None:
+    """Change all axes to be equal aspect."""
+    if isinstance(axes, typing.Iterable):
+        for ax in axes:
+            invert_yaxis(ax)
+    else:
+        axes.invert_yaxis()
+    return
+
+
 def pixel_to_Q(d1: np.ndarray, d2: np.ndarray, ai: AzimuthalIntegrator) -> xr.DataArray:
     """Map pixel position (d1, d2) to Q in nm-1."""
     arr = xr.DataArray(ai.qCornerFunct(d1, d2))
@@ -537,6 +547,96 @@ def show_tiff_array(template: str, index: int, **kwargs):
     return
 
 
+def limit_3std(da: xr.DataArray) -> typing.Tuple[float, float]:
+    """Return the mean - 3 * std and mean + 3 * std of the data array.
+
+    Parameters
+    ----------
+    da
+
+    Returns
+    -------
+
+    """
+    m, s = da.mean(), da.std()
+    return m - 3 * s, m + 3 * s
+
+
+def plot_crystal_maps(da: xr.DataArray, limit_func: typing.Callable = None, **kwargs) -> FacetGrid:
+    """Plot the crystal maps.
+
+    Parameters
+    ----------
+    da
+    limit_func
+    kwargs
+
+    Returns
+    -------
+
+    """
+    if limit_func is None:
+        limit_func = limit_3std
+    kwargs.setdefault("col", "grain")
+    kwargs.setdefault("col_wrap", 20)
+    kwargs.setdefault("sharex", False)
+    kwargs.setdefault("sharey", False)
+    kwargs.setdefault("add_colorbar", False)
+    kwargs.setdefault("size", 20)
+    kwargs.setdefault("aspect", da.shape[0] / da.shape[1])
+    vmin, vmax = limit_func(da)
+    kwargs.setdefault("vmax", vmax)
+    kwargs.setdefault("vmin", vmin)
+    facet = da.plot.imshow(**kwargs)
+    set_real_aspect(facet.axes)
+    invert_yaxis(facet.axes)
+    return facet
+
+
+def plot_rocking_curves(da: xr.DataArray, **kwargs) -> FacetGrid:
+    """Plot the rocking curves.
+
+    Parameters
+    ----------
+    da
+    kwargs
+
+    Returns
+    -------
+
+    """
+    kwargs.setdefault("col", "grain")
+    kwargs.setdefault("col_wrap", 5)
+    kwargs.setdefault("sharex", False)
+    kwargs.setdefault("sharey", False)
+    return da.plot.line(**kwargs)
+
+
+def auto_plot(da: xr.DataArray, **kwargs) -> FacetGrid:
+    """Automatically detect the data type and plot the data array.
+
+    Parameters
+    ----------
+    da :
+        The data array containing the intensity.
+    kwargs :
+        The kwargs for the configuration of the plot.
+
+    Returns
+    -------
+    Usually a FacetGrid object.
+    """
+    da: xr.DataArray = da.squeeze()
+    if da.ndim <= 1:
+        da.plot(**kwargs)
+    elif da.ndim == 2:
+        return plot_rocking_curves(da, **kwargs)
+    elif da.ndim == 3:
+        return plot_crystal_maps(da, **kwargs)
+    kwargs.setdefault("col", "grain")
+    return da.plot(**kwargs)
+
+
 class CalculatorError(Exception):
     pass
 
@@ -673,12 +773,6 @@ class Calculator(object):
         draw_windows(self.windows, facet.axes)
         return facet
 
-    def show_intensity(self, *args, real_aspect: bool = False, **kwargs) -> FacetGrid:
+    def show_intensity(self, **kwargs) -> FacetGrid:
         arr = self.intensity_to_xarray()
-        if arr.shape[0] > 1:
-            kwargs.setdefault("col", arr.dims[0])
-        facet: FacetGrid = arr.plot(*args, **kwargs)
-        facet.set_titles("{value}")
-        if real_aspect:
-            set_real_aspect(facet.axes)
-        return facet
+        return auto_plot(arr, **kwargs)
