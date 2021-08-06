@@ -1,0 +1,11 @@
+name: tomology
+channels:
+  - nsls2forge
+  - conda-forge
+  - defaults
+dependencies:
+  - trackpy
+  - bluesky
+  - databroker
+  - pyFAI
+  - jupyterlab
