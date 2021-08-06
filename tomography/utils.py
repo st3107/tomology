@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tqdm
 import trackpy as tp
 import xarray as xr
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
@@ -434,13 +435,15 @@ def average_intensity(frame: np.ndarray, windows: pd.DataFrame) -> np.ndarray:
 
 def track_peaks2(frames: xr.DataArray, windows: pd.DataFrame) -> np.ndarray:
     """Create a list of tasks to compute the grain maps. Each task is one grain map."""
-    # get limits
-    nf = str(len(frames)) if hasattr(frames, "__len__") else "?"
     # create intensity vs time for each grain
+    global _VERBOSE
     intensities = []
-    for i, frame in enumerate(frames):
-        my_print("Process frame {} / {}.".format(i + 1, nf), end="\r")
-        intensity = average_intensity(frame.values, windows)
+    n = frames.shape[0]
+    iter_range = range(n)
+    if _VERBOSE > 0:
+        iter_range = tqdm.tqdm(iter_range)
+    for i in iter_range:
+        intensity = average_intensity(frames[i].values, windows)
         intensities.append(intensity)
     # axis: grain, frame
     return np.stack(intensities).transpose()
@@ -503,14 +506,15 @@ def create_windows_from_width2(df: pd.DataFrame, width: int) -> pd.DataFrame:
 def min_and_max_along_time2(data: xr.DataArray) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Extract the minimum and maximum values of each pixel in a series of mean frames. Return a data array.
     First is the min array and the second is the max array."""
+    global _VERBOSE
     min_arr = max_arr = np.mean(data[0].values, axis=0)
-    num = data.shape[0]
-    my_print("Process frame: {} / {}".format(1, num), end="\r")
-    for i in range(1, len(data)):
+    iter_range = range(1, len(data))
+    if _VERBOSE > 0:
+        iter_range = tqdm.tqdm(iter_range)
+    for i in iter_range:
         arr = np.mean(data[i].values, axis=0)
         min_arr = np.fmin(min_arr, arr)
         max_arr = np.fmax(max_arr, arr)
-        my_print("Process frame: {} / {}".format(i + 1, num), end="\r")
     return min_arr, max_arr
 
 
@@ -626,7 +630,6 @@ def auto_plot(da: xr.DataArray, **kwargs) -> FacetGrid:
     -------
     Usually a FacetGrid object.
     """
-    da: xr.DataArray = da.squeeze()
     if da.ndim <= 1:
         da.plot(**kwargs)
     elif da.ndim == 2:
@@ -669,15 +672,22 @@ class Calculator(object):
         if getattr(self, name) is None:
             raise CalculatorError("Attribute '{}' is None. Please set it.".format(name))
 
-    def calc_dark_and_light_from_frames_arr(self):
+    def calc_dark_and_light_from_frames_arr(self, index_range: slice = None):
         """Get the light and dark frame in a series of frames."""
         self._check_attr("frames_arr")
-        self.dark, self.light = min_and_max_along_time2(self.frames_arr)
+        frames_arr = self.frames_arr[index_range]
+        self.dark, self.light = min_and_max_along_time2(frames_arr)
 
     def calc_peaks_from_light_frame(self, diameter: typing.Union[int, tuple], *args, **kwargs):
         """Get the Bragg peaks on the light frame."""
         self._check_attr("light")
         self.peaks = tp.locate(self.light, diameter, *args, **kwargs)
+
+    def calc_peaks_from_dk_sub_frame(self, diameter: typing.Union[int, tuple], *args, **kwargs):
+        """Get the Bragg peaks on the light frame."""
+        self._check_attr("light")
+        light = self.light if self.dark is None else self.light - self.dark
+        self.peaks = tp.locate(light, diameter, *args, **kwargs)
 
     def calc_windows_from_peaks(self, num: int, width: int):
         """Gte the windows for the most brightest Bragg peaks."""
@@ -743,6 +753,8 @@ class Calculator(object):
         if self.windows is not None:
             ds2 = self.windows_to_xarray()
             ds = ds.merge(ds2)
+        if self.metadata is not None:
+            ds = ds.assign_attrs(**self.metadata)
         return ds
 
     def show_frame(self, index: int) -> None:
