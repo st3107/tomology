@@ -675,7 +675,7 @@ class Calculator(object):
     def calc_dark_and_light_from_frames_arr(self, index_range: slice = None):
         """Get the light and dark frame in a series of frames."""
         self._check_attr("frames_arr")
-        frames_arr = self.frames_arr[index_range]
+        frames_arr = self.frames_arr[index_range] if index_range is not None else self.frames_arr
         self.dark, self.light = min_and_max_along_time2(frames_arr)
 
     def calc_peaks_from_light_frame(self, diameter: typing.Union[int, tuple], *args, **kwargs):
