@@ -631,7 +631,7 @@ def auto_plot(da: xr.DataArray, **kwargs) -> FacetGrid:
     Usually a FacetGrid object.
     """
     if da.ndim <= 1:
-        da.plot(**kwargs)
+        return da.plot(**kwargs)
     elif da.ndim == 2:
         return plot_rocking_curves(da, **kwargs)
     elif da.ndim == 3:
