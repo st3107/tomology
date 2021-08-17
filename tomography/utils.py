@@ -566,13 +566,19 @@ def limit_3std(da: xr.DataArray) -> typing.Tuple[float, float]:
     return m - 3 * s, m + 3 * s
 
 
-def plot_crystal_maps(da: xr.DataArray, limit_func: typing.Callable = None, **kwargs) -> FacetGrid:
+def plot_crystal_maps(
+    da: xr.DataArray,
+    limit_func: typing.Callable = None,
+    invert_y: bool = False,
+    **kwargs
+) -> FacetGrid:
     """Plot the crystal maps.
 
     Parameters
     ----------
     da
     limit_func
+    invert_y
     kwargs
 
     Returns
@@ -586,14 +592,15 @@ def plot_crystal_maps(da: xr.DataArray, limit_func: typing.Callable = None, **kw
     kwargs.setdefault("sharex", False)
     kwargs.setdefault("sharey", False)
     kwargs.setdefault("add_colorbar", False)
-    kwargs.setdefault("size", 20)
-    kwargs.setdefault("aspect", da.shape[0] / da.shape[1])
+    kwargs.setdefault("size", 8)
+    kwargs.setdefault("aspect", da.shape[1] / da.shape[0])
     vmin, vmax = limit_func(da)
     kwargs.setdefault("vmax", vmax)
     kwargs.setdefault("vmin", vmin)
     facet = da.plot.imshow(**kwargs)
     set_real_aspect(facet.axes)
-    invert_yaxis(facet.axes)
+    if invert_y:
+        invert_yaxis(facet.axes)
     return facet
 
 
@@ -616,13 +623,22 @@ def plot_rocking_curves(da: xr.DataArray, **kwargs) -> FacetGrid:
     return da.plot.line(**kwargs)
 
 
-def auto_plot(da: xr.DataArray, **kwargs) -> FacetGrid:
+def auto_plot(
+    da: xr.DataArray,
+    title: typing.Tuple[str, str] = None,
+    invert_y: bool = False,
+    **kwargs
+) -> FacetGrid:
     """Automatically detect the data type and plot the data array.
 
     Parameters
     ----------
     da :
         The data array containing the intensity.
+    title :
+        Determine title of the axes. It is a format string and a name of the variable. If None, do nothing.
+    invert_y :
+        Invert the y axis.
     kwargs :
         The kwargs for the configuration of the plot.
 
@@ -631,13 +647,30 @@ def auto_plot(da: xr.DataArray, **kwargs) -> FacetGrid:
     Usually a FacetGrid object.
     """
     if da.ndim <= 1:
-        return da.plot(**kwargs)
+        facet = da.plot(**kwargs)
     elif da.ndim == 2:
-        return plot_rocking_curves(da, **kwargs)
+        facet = plot_rocking_curves(da, **kwargs)
     elif da.ndim == 3:
-        return plot_crystal_maps(da, **kwargs)
-    kwargs.setdefault("col", "grain")
-    return da.plot(**kwargs)
+        facet = plot_crystal_maps(da, invert_y=invert_y, **kwargs)
+    else:
+        kwargs.setdefault("col", "grain")
+        facet = da.plot(**kwargs)
+    if title is not None:
+        v_name, f_title = title
+        vals: np.ndarray = da[v_name].values
+        axes: typing.List[plt.Axes] = facet.axes.flatten()
+        for ax, val in zip(axes, vals):
+            ax.set_title(f_title.format(val))
+    return facet
+
+
+def set_vlim(kwargs: dict, da: xr.DataArray, alpha: float, low_lim: float = 0.,
+             high_lim: float = float("inf")) -> None:
+    mean = da.values.mean()
+    std = da.values.std()
+    kwargs.setdefault("vmin", max(low_lim, mean - std * alpha))
+    kwargs.setdefault("vmax", min(high_lim, mean + std * alpha))
+    return
 
 
 class CalculatorError(Exception):
@@ -757,31 +790,54 @@ class Calculator(object):
             ds = ds.assign_attrs(**self.metadata)
         return ds
 
-    def show_frame(self, index: int) -> None:
+    def get_frame(self, index: int) -> xr.DataArray:
         self._check_attr("frames_arr")
-        frame = self.frames_arr[index].compute().mean(axis=0)
-        fig, ax = plt.subplots()
-        frame.plot.imshow(ax=ax)
-        set_real_aspect(ax)
-        return
+        return self.frames_arr[index].compute().mean(axis=0)
+
+    def show_frame(self, index: int, *args, **kwargs) -> FacetGrid:
+        frame = self.get_frame(index)
+        set_vlim(kwargs, frame, 4.)
+        facet = frame.plot.imshow(*args, **kwargs)
+        set_real_aspect(facet.axes)
+        return facet
+
+    def show_windows_on_frame(self, index: int, *args, **kwargs) -> FacetGrid:
+        self._check_attr("windows")
+        facet = self.show_frame(index, *args, **kwargs)
+        draw_windows(self.windows, facet.axes)
+        return facet
 
     def show_dark(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("dark")
-        facet = self.dark_to_xarray().plot.imshow(*args, **kwargs)
+        frame = self.dark_to_xarray()
+        set_vlim(kwargs, frame, 4.)
+        facet = frame.plot.imshow(*args, **kwargs)
         set_real_aspect(facet.axes)
         return facet
 
     def show_light(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("light")
-        facet = self.light_to_xarray().plot.imshow(*args, **kwargs)
+        frame = self.light_to_xarray()
+        set_vlim(kwargs, frame, 4.)
+        facet = frame.plot.imshow(*args, **kwargs)
+        set_real_aspect(facet.axes)
+        return facet
+
+    def show_light_sub_dark(self, *args, **kwargs) -> FacetGrid:
+        self._check_attr("light")
+        light = self.light_to_xarray()
+        if self.dark is not None:
+            dark = self.dark_to_xarray()
+            light = np.subtract(light, dark)
+        set_vlim(kwargs, light, 4.)
+        facet = light.plot.imshow(*args, **kwargs)
         set_real_aspect(facet.axes)
         return facet
 
     def show_windows(self, *args, **kwargs) -> FacetGrid:
         self._check_attr("light")
         self._check_attr("windows")
-        facet = self.light_to_xarray().plot.imshow(*args, **kwargs)
-        set_real_aspect(facet.axes)
+        facet = self.show_light_sub_dark(*args, **kwargs)
         draw_windows(self.windows, facet.axes)
         return facet
 
