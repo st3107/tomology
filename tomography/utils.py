@@ -705,6 +705,18 @@ class Calculator(object):
         if getattr(self, name) is None:
             raise CalculatorError("Attribute '{}' is None. Please set it.".format(name))
 
+    def squeeze_shape_and_extents(self) -> None:
+        self._check_attr("metadata")
+        shape = self.metadata["shape"]
+        n = len(shape)
+        # get the index of the dimension > 1
+        index = {i for i in range(n) if shape[i] > 1}
+        self.metadata["shape"] = [shape[i] for i in range(n) if i in index]
+        if "extents" in self.metadata:
+            extents = self.metadata["extents"]
+            self.metadata["extents"] = [extents[i] for i in range(n) if i in index]
+        return
+
     def calc_dark_and_light_from_frames_arr(self, index_range: slice = None):
         """Get the light and dark frame in a series of frames."""
         self._check_attr("frames_arr")
