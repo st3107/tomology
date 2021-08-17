@@ -664,6 +664,23 @@ def auto_plot(
     return facet
 
 
+def auto_plot_dataset(
+    ds: xr.Dataset,
+    key: str = "intensity",
+    title: typing.Tuple[str, str] = None,
+    invert_y: bool = False,
+    **kwargs
+):
+    facet = auto_plot(ds[key], title=None, invert_y=invert_y, **kwargs)
+    if title is not None:
+        v_name, f_title = title
+        vals: np.ndarray = ds[v_name].values
+        axes: typing.List[plt.Axes] = facet.axes.flatten()
+        for ax, val in zip(axes, vals):
+            ax.set_title(f_title.format(val))
+    return facet
+
+
 def set_vlim(kwargs: dict, da: xr.DataArray, alpha: float, low_lim: float = 0.,
              high_lim: float = float("inf")) -> None:
     mean = da.values.mean()
