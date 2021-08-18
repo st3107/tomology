@@ -592,8 +592,6 @@ def plot_crystal_maps(
     kwargs.setdefault("sharex", False)
     kwargs.setdefault("sharey", False)
     kwargs.setdefault("add_colorbar", False)
-    kwargs.setdefault("size", 8)
-    kwargs.setdefault("aspect", da.shape[1] / da.shape[0])
     vmin, vmax = limit_func(da)
     kwargs.setdefault("vmax", vmax)
     kwargs.setdefault("vmin", vmin)
