@@ -598,7 +598,11 @@ def plot_crystal_maps(
     facet = da.plot.imshow(**kwargs)
     set_real_aspect(facet.axes)
     if invert_y:
-        invert_yaxis(facet.axes)
+        if kwargs.get("sharey"):
+            # if y is shared, only the first one need to be inverted
+            invert_yaxis(facet.axes.flatten()[0])
+        else:
+            invert_yaxis(facet.axes)
     return facet
 
 
