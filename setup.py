@@ -3,8 +3,6 @@ from os import path
 
 from setuptools import setup, find_packages
 
-import versioneer
-
 # NOTE: This file must remain Python 2 compatible for the foreseeable future,
 # to ensure that we error out properly for people with outdated setuptools
 # and/or pip.
@@ -37,7 +35,6 @@ with open(path.join(here, 'requirements.txt')) as requirements_file:
 setup(
     name='crystalmapping',
     version='0.0.1',
-    cmdclass=versioneer.get_cmdclass(),
     description="A crystal tomography of a multi-domain crystal rod",
     long_description=readme,
     author="Songsheng Tao",
