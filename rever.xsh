@@ -8,6 +8,7 @@ $ACTIVITIES = [
               'pypi',  # Sends the package to pypi
                ]
 $VERSION_BUMP_PATTERNS = [  # These note where/how to find the version numbers
+                         ('rever/__init__.py', r'__version__\s*=.*', "__version__ = '$VERSION'"),
                          ('setup.py', r'version\s*=.*,', "version='$VERSION',")
                          ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'  # Filename for the changelog
