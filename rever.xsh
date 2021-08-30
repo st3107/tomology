@@ -14,3 +14,4 @@ $GITHUB_ORG = 'st3107'  # Github org for Github releases and conda-forge
 $GITHUB_REPO = 'tomology'  # Github repo for Github releases  and conda-forge
 
 $PYPI_NAME = 'crystalmapping'
+$PYPI_UPLOAD = 'False'
