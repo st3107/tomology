@@ -35,7 +35,7 @@ with open(path.join(here, 'requirements.txt')) as requirements_file:
 
 
 setup(
-    name='tomography',
+    name='crystalmapping',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="A crystal tomography of a multi-domain crystal rod",
