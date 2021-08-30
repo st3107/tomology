@@ -12,5 +12,3 @@ $PUSH_TAG_REMOTE = 'git@github.com:st3107/tomology.git'  # Repo to push tags to
 
 $GITHUB_ORG = 'st3107'  # Github org for Github releases and conda-forge
 $GITHUB_REPO = 'tomology'  # Github repo for Github releases  and conda-forge
-
-$PYPI_UPLOAD = False
