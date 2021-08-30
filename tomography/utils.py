@@ -697,6 +697,43 @@ class CalculatorError(Exception):
 
 
 class Calculator(object):
+    """The Calculator of the crystal maps.
+
+    Each of the attribute can be the calculated output and the input for the next step of calculation.
+
+    Attributes
+    ----------
+    frames_arr : DataArray
+        A data array of diffraction data. It is assumed to be a (N, F, Y, X) shape array, where N is the number
+        of exposure, F is the number of the frames in one exposure, the Y is the number of pixels in vertical,
+        X is the number of pixels in horizontal. It can also be (N, Y, X) shape array if there is only one
+        frame in each exposure.
+    dark : ndarray
+        The minimum values on the pixels in whole series of exposures. It is assumed to be the background.
+    light: ndarray
+        The maximum values on the pixels in the whole series of exposures. It is assumed to be a image of all
+        the Bragg peaks on the background.
+    peaks: DataFrame
+        A dataframe records all the peak positions.
+    windows: DataFrame
+        A dataframe records all the center positions and half width of the windows.
+    intensity: ndarray
+        The array of the average intensity in each of the windows in the series of exposures. It has the shape (
+        W, dim_0, dim_1, ...). The W is the number of the windows and the dim_i is the length of the dimension
+        i in the grid scan.
+    bkg_intensity : ndarray
+        The integrated background intensity in the windows.
+    coords : ndarray
+        The coordinates of the dim_0, dim_1, ... in grid scan.
+    metadata : dict
+        The dictionary to record the metadata. There are two important keys: shape, extents. The shape is the
+        number of points in each dimension in the grid scan. It should be a array like (dim_0, dim_1, ...). The
+        extents are the start and end value for each dimension. It should be array like [(start0, end0),
+        (start1, end1), ...]. These two keys are used to calculate the coordinates.
+    ai : AzimuthalIntegrator
+        The class to hold the data of the geometry of the experiments. It is used to index the Q values for each
+        window.
+    """
 
     def __init__(self):
         # dims: time, ..., pixel_y, pixel_x
@@ -725,6 +762,7 @@ class Calculator(object):
             raise CalculatorError("Attribute '{}' is None. Please set it.".format(name))
 
     def squeeze_shape_and_extents(self) -> None:
+        """Squeeze the shape and extents so that it only has the dimension with length > 1."""
         self._check_attr("metadata")
         shape = self.metadata["shape"]
         n = len(shape)
@@ -783,15 +821,19 @@ class Calculator(object):
         self.intensity = reshape_to_ndarray(self.intensity, self.metadata)
 
     def calc_coords(self):
+        """Calculate the coordinates."""
         self.coords = get_coords2(self.metadata)
 
     def dark_to_xarray(self) -> xr.DataArray:
+        """Convert the dark image to DataArray."""
         return xr.DataArray(self.dark, dims=["pixel_y", "pixel_x"])
 
     def light_to_xarray(self) -> xr.DataArray:
+        """Convert the light image to DataArray"""
         return xr.DataArray(self.light, dims=["pixel_y", "pixel_x"])
 
     def intensity_to_xarray(self) -> xr.DataArray:
+        """Convert the intensity array to DataArray"""
         dims = ["dim_{}".format(i) for i in range(self.intensity.ndim - 1)]
         arr = xr.DataArray(self.intensity, dims=["grain"] + dims)
         if self.coords is not None:
@@ -800,12 +842,15 @@ class Calculator(object):
         return arr
 
     def windows_to_xarray(self) -> xr.DataArray:
+        """Convert the windows DataFrame to xarray."""
         return self.windows.rename_axis(index="grain").to_xarray()
 
     def coords_to_dict(self) -> dict:
+        """Convert the coordinates to dictionary."""
         return {"dim_{}".format(i): coord for i, coord in enumerate(self.coords)}
 
     def to_dataset(self) -> xr.Dataset:
+        """Convert the calculation results to DataSet."""
         dct = dict()
         if self.dark is not None:
             dct["dark"] = self.dark_to_xarray()
@@ -822,10 +867,12 @@ class Calculator(object):
         return ds
 
     def get_frame(self, index: int) -> xr.DataArray:
+        """Get the frame of at the index."""
         self._check_attr("frames_arr")
         return self.frames_arr[index].compute().mean(axis=0)
 
     def show_frame(self, index: int, *args, **kwargs) -> FacetGrid:
+        """Show the frame at that index."""
         frame = self.get_frame(index)
         set_vlim(kwargs, frame, 4.)
         facet = frame.plot.imshow(*args, **kwargs)
@@ -833,12 +880,14 @@ class Calculator(object):
         return facet
 
     def show_windows_on_frame(self, index: int, *args, **kwargs) -> FacetGrid:
+        """Show the windows on the frame at the index."""
         self._check_attr("windows")
         facet = self.show_frame(index, *args, **kwargs)
         draw_windows(self.windows, facet.axes)
         return facet
 
     def show_dark(self, *args, **kwargs) -> FacetGrid:
+        """Show the dark image."""
         self._check_attr("dark")
         frame = self.dark_to_xarray()
         set_vlim(kwargs, frame, 4.)
@@ -847,6 +896,7 @@ class Calculator(object):
         return facet
 
     def show_light(self, *args, **kwargs) -> FacetGrid:
+        """Show the light image."""
         self._check_attr("light")
         frame = self.light_to_xarray()
         set_vlim(kwargs, frame, 4.)
@@ -855,6 +905,7 @@ class Calculator(object):
         return facet
 
     def show_light_sub_dark(self, *args, **kwargs) -> FacetGrid:
+        """Show the dark subtracted light image."""
         self._check_attr("light")
         light = self.light_to_xarray()
         if self.dark is not None:
@@ -866,6 +917,7 @@ class Calculator(object):
         return facet
 
     def show_windows(self, *args, **kwargs) -> FacetGrid:
+        """Show the windows on the dark subtracted light image."""
         self._check_attr("light")
         self._check_attr("windows")
         facet = self.show_light_sub_dark(*args, **kwargs)
@@ -873,6 +925,7 @@ class Calculator(object):
         return facet
 
     def show_intensity(self, **kwargs) -> FacetGrid:
+        """Show the intensity array."""
         arr = self.intensity_to_xarray()
         return auto_plot(arr, **kwargs)
 
@@ -884,10 +937,13 @@ class Calculator(object):
         invert_y: bool = False,
         **kwargs
     ) -> FacetGrid:
+        """Automatically plot the intensity array in the dataset."""
         return auto_plot_dataset(ds, key, title, invert_y, **kwargs)
 
     def auto_process(self, num_wins: int, hw_wins: int, diameter: int, *args, **kwargs) -> None:
+        """Automatically process the data in the standard protocol."""
         self.calc_dark_and_light_from_frames_arr()
+        self.squeeze_shape_and_extents()
         try:
             self.coords_to_dict()
         except Calculator as e:
