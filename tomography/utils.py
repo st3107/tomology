@@ -875,3 +875,28 @@ class Calculator(object):
     def show_intensity(self, **kwargs) -> FacetGrid:
         arr = self.intensity_to_xarray()
         return auto_plot(arr, **kwargs)
+
+    @staticmethod
+    def auto_plot(
+        ds: xr.Dataset,
+        key: str = "intensity",
+        title: typing.Tuple[str, str] = None,
+        invert_y: bool = False,
+        **kwargs
+    ) -> FacetGrid:
+        return auto_plot_dataset(ds, key, title, invert_y, **kwargs)
+
+    def auto_process(self, num_wins: int, hw_wins: int, diameter: int, *args, **kwargs) -> None:
+        self.calc_dark_and_light_from_frames_arr()
+        try:
+            self.coords_to_dict()
+        except Calculator as e:
+            print(e)
+        self.calc_peaks_from_dk_sub_frame(diameter, *args, **kwargs)
+        self.calc_windows_from_peaks(num_wins, hw_wins)
+        self.calc_intensity_in_windows()
+        try:
+            self.reshape_intensity()
+        except Calculator as e:
+            print(e)
+        return
