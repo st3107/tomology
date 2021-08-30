@@ -483,11 +483,11 @@ def reshape_to_xarray2(arr: xr.DataArray, metadata: dict) -> xr.DataArray:
         raise ValueError("The arr must have 2 dimensions. This has {}.".format(arr.ndim))
     shape = metadata["shape"]
     dims = [arr.dims[0]]
-    dims.extend(["dim_{}".format(i+1) for i in range(len(metadata["shape"]))])
+    dims.extend(["dim_{}".format(i + 1) for i in range(len(metadata["shape"]))])
     data = xr.DataArray(reshape_to_ndarray(arr.values.copy(), metadata), dims=dims)
     if "extents" in metadata:
         extents = metadata["extents"]
-        coords = {"dim_{}".format(i+1): np.linspace(*extent, num)
+        coords = {"dim_{}".format(i + 1): np.linspace(*extent, num)
                   for i, (extent, num) in enumerate(zip(extents, shape))}
         data = data.assign_coords(coords)
     return data

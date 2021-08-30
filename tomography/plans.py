@@ -537,7 +537,7 @@ def fly_scan_nd_no_shutter(
     if move_velocity < low or move_velocity > high:
         raise ValueError("The move velocity is {}. ".format(move_velocity) +
                          "It is out of the range of the motor speed: ({}, {}).".format(low, high))
-        
+
     @bpp.reset_positions_decorator([fly_motor.velocity])
     @bpp.set_run_key_decorator(f"xrd_map_{uuid.uuid4()}")
     @bpp.stage_decorator(detectors)
