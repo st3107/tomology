@@ -941,9 +941,30 @@ class Calculator(object):
         """Automatically plot the intensity array in the dataset."""
         return auto_plot_dataset(ds, key, title, invert_y, **kwargs)
 
-    def auto_process(self, num_wins: int, hw_wins: int, diameter: int, *args, **kwargs) -> None:
-        """Automatically process the data in the standard protocol."""
-        self.calc_dark_and_light_from_frames_arr()
+    def auto_process(self, num_wins: int, hw_wins: int, diameter: int, index_filter: slice = None,
+                     *args, **kwargs) -> None:
+        """Automatically process the data in the standard protocol.
+
+        Parameters
+        ----------
+        num_wins : int
+            The number of windows.
+        hw_wins : int
+            The half width of the windows in pixels.
+        diameter : int
+            The diameter of the kernel to use in peak finding in pixels.
+        index_filter : slice
+            The index slice of the data to use in the calculation of the dark and light image.
+        args :
+            The position arguments of the peak finding function `trackpy.locate`.
+        kwargs :
+            The keyword arguments of the peak finding function `trackpy.locate`.
+
+        Returns
+        -------
+        None. The calculation results are saved in attributes.
+        """
+        self.calc_dark_and_light_from_frames_arr(index_filter)
         self.squeeze_shape_and_extents()
         self.calc_peaks_from_dk_sub_frame(diameter, *args, **kwargs)
         self.calc_windows_from_peaks(num_wins, hw_wins)
