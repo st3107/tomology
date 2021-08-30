@@ -944,15 +944,19 @@ class Calculator(object):
         """Automatically process the data in the standard protocol."""
         self.calc_dark_and_light_from_frames_arr()
         self.squeeze_shape_and_extents()
-        try:
-            self.coords_to_dict()
-        except Calculator as e:
-            print(e)
         self.calc_peaks_from_dk_sub_frame(diameter, *args, **kwargs)
         self.calc_windows_from_peaks(num_wins, hw_wins)
         self.calc_intensity_in_windows()
         try:
             self.reshape_intensity()
+        except Calculator as e:
+            print(e)
+        try:
+            self.coords_to_dict()
+        except Calculator as e:
+            print(e)
+        try:
+            self.assign_q_values()
         except Calculator as e:
             print(e)
         return
