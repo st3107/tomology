@@ -761,6 +761,8 @@ class Calculator(object):
     def _check_attr(self, name: str):
         if getattr(self, name) is None:
             raise CalculatorError("Attribute '{}' is None. Please set it.".format(name))
+        if name == "metadata" and "shape" not in self.metadata:
+            raise CalculatorError("There is no key 'shape' in the metadata.")
 
     def squeeze_shape_and_extents(self) -> None:
         """Squeeze the shape and extents so that it only has the dimension with length > 1."""
@@ -823,6 +825,7 @@ class Calculator(object):
 
     def calc_coords(self):
         """Calculate the coordinates."""
+        self._check_attr("metadata")
         self.coords = get_coords2(self.metadata)
 
     def dark_to_xarray(self) -> xr.DataArray:
@@ -931,7 +934,7 @@ class Calculator(object):
         return auto_plot(arr, **kwargs)
 
     @staticmethod
-    def auto_plot(
+    def auto_visualize(
         ds: xr.Dataset,
         key: str = "intensity",
         title: typing.Tuple[str, str] = None,
@@ -952,7 +955,7 @@ class Calculator(object):
         hw_wins : int
             The half width of the windows in pixels.
         diameter : int
-            The diameter of the kernel to use in peak finding in pixels.
+            The diameter of the kernel to use in peak finding in pixels. It must be an odd integer.
         index_filter : slice
             The index slice of the data to use in the calculation of the dark and light image.
         args :
@@ -964,21 +967,23 @@ class Calculator(object):
         -------
         None. The calculation results are saved in attributes.
         """
-        self.calc_dark_and_light_from_frames_arr(index_filter)
+        if diameter % 2 == 0:
+            raise CalculatorError("Diamter must be an odd integer.")
         self.squeeze_shape_and_extents()
+        self.calc_dark_and_light_from_frames_arr(index_filter)
         self.calc_peaks_from_dk_sub_frame(diameter, *args, **kwargs)
         self.calc_windows_from_peaks(num_wins, hw_wins)
         self.calc_intensity_in_windows()
         try:
-            self.reshape_intensity()
-        except Calculator as e:
-            print(e)
-        try:
-            self.coords_to_dict()
-        except Calculator as e:
+            self.calc_coords()
+        except CalculatorError as e:
             print(e)
         try:
             self.assign_q_values()
-        except Calculator as e:
+        except CalculatorError as e:
+            print(e)
+        try:
+            self.reshape_intensity()
+        except CalculatorError as e:
             print(e)
         return
