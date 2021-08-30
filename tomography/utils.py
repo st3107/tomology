@@ -1,6 +1,7 @@
 import math
 import typing
 
+import fabio
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
