@@ -11,4 +11,4 @@ At the command line::
     cd tomology
     conda env create -f env_dev.yaml
     conda activate tomology
-    python -m pip install .
+    pip install -e .
