@@ -1,6 +1,6 @@
-{ % set name = 'tomography' % }
-{ % set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') % }
-{ % set build_number = environ.get('GIT_DESCRIBE_NUMBER', '0') % }
+{% set name = 'tomography' %}
+{% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') %}
+{% set build_number = environ.get('GIT_DESCRIBE_NUMBER', '0') %}
 
 package:
   name: { { name|lower } }
