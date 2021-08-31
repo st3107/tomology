@@ -17,6 +17,7 @@ build:
   # for more details.
   # noarch: python
 
+  noarch: python
   number: {{ build_number }}
   string: "{{ [ build_number, ('h' + PKG_HASH), environ.get('GIT_DESCRIBE_HASH', '') ] | join('_') }}"
   script: "python -m pip install . -vv"
