@@ -1,35 +1,24 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
-  <meta charset="utf-8" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Process streaming data using the peak tracking method &mdash; tomography 0.post1+g0b861ef documentation</title>
-  
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
-  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-
-  
+  <title>Use the old peak tracking algorithm in streaming data processing &mdash; tomography 0.0.1 documentation</title>
   
 
   
   
-
+  
   
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -43,10 +32,18 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Minimum Version of Python and NumPy" href="min_versions.html" />
-    <link rel="prev" title="Run experiments at NSLS-II" href="experiment1.html" /> 
+    <link rel="next" title="Use new algorithm to run the batch processing" href="new_algorithm.html" />
+    <link rel="prev" title="Run experiments at NSLS-II" href="experiment.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -70,7 +67,7 @@
             
             
               <div class="version">
-                0.post1+g0b861ef
+                0.0.1
               </div>
             
           
@@ -87,7 +84,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -97,21 +93,22 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="experiment1.html">Run experiments at NSLS-II</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Process streaming data using the peak tracking method</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="experiment.html">Run experiments at NSLS-II</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Use the old peak tracking algorithm in streaming data processing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#take-a-look-at-the-raw-data">Take a look at the raw data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use-callbacks-to-process-the-event-stream">Use callbacks to process the event stream</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#use-servers-to-process-the-real-time-event-stream">Use servers to process the real time event stream</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pipe-the-data-into-the-database">Pipe the data into the database</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="new_algorithm.html">Use new algorithm to run the batch processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">API Documents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
 </ul>
 
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -146,21 +143,19 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Process streaming data using the peak tracking method</li>
+      <li>Use the old peak tracking algorithm in streaming data processing</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/process_streaming_data.rst.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/old_algorithm.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -173,13 +168,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="process-streaming-data-using-the-peak-tracking-method">
-<h1>Process streaming data using the peak tracking method<a class="headerlink" href="#process-streaming-data-using-the-peak-tracking-method" title="Permalink to this headline">¶</a></h1>
+  <section id="use-the-old-peak-tracking-algorithm-in-streaming-data-processing">
+<h1>Use the old peak tracking algorithm in streaming data processing<a class="headerlink" href="#use-the-old-peak-tracking-algorithm-in-streaming-data-processing" title="Permalink to this headline">¶</a></h1>
+<p>The package also offers the infrastructure for the streaming data
+processing old way, where the peaks are tracked on each image in
+the series of the exposures and the peaks will be linked in the
+final. The crystal maps are generated by filling the peak
+intensity in the zero background.</p>
 <p>Here, we show an example to process the streaming data. The streaming
 data is obtained from the database and we will use <code class="docutils literal notranslate"><span class="pre">databroker</span></code> as the
 interface to the database. In real use cases, the data will be from the
 <code class="docutils literal notranslate"><span class="pre">RunEngine</span></code>.</p>
-<div class="section" id="take-a-look-at-the-raw-data">
+<section id="take-a-look-at-the-raw-data">
 <h2>Take a look at the raw data<a class="headerlink" href="#take-a-look-at-the-raw-data" title="Permalink to this headline">¶</a></h2>
 <p>First, we take a look at what our data is like. This is a grid scan on a
 crystal rod. At each pixel in the grid, there are multiple frames of
@@ -208,8 +208,8 @@ images in this scan.</p>
 </pre></div>
 </div>
 <img alt="_images/process_streaming_data_8_0.png" src="_images/process_streaming_data_8_0.png" />
-</div>
-<div class="section" id="use-callbacks-to-process-the-event-stream">
+</section>
+<section id="use-callbacks-to-process-the-event-stream">
 <h2>Use callbacks to process the event stream<a class="headerlink" href="#use-callbacks-to-process-the-event-stream" title="Permalink to this headline">¶</a></h2>
 <p>Here, we use the callbacks to process the data in a stream. The frames
 will be first go into the <code class="docutils literal notranslate"><span class="pre">ImageProcessor</span></code>. The frames will be
@@ -252,8 +252,8 @@ more information.</p>
         <span class="n">ip</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="use-servers-to-process-the-real-time-event-stream">
+</section>
+<section id="use-servers-to-process-the-real-time-event-stream">
 <h2>Use servers to process the real time event stream<a class="headerlink" href="#use-servers-to-process-the-real-time-event-stream" title="Permalink to this headline">¶</a></h2>
 <p>We are basically replaying the data processing procedure in the last
 section. In this section, we will learn how the data is processed at the
@@ -302,8 +302,8 @@ callback function in last section. An example script is show here.</p>
 <p>Then, this server will receive the data from “localhost:5568” with
 prefix “raw” and process the data using the callback defined in the
 script.</p>
-</div>
-<div class="section" id="pipe-the-data-into-the-database">
+</section>
+<section id="pipe-the-data-into-the-database">
 <h2>Pipe the data into the database<a class="headerlink" href="#pipe-the-data-into-the-database" title="Permalink to this headline">¶</a></h2>
 <p>We can also publish the data in the database to the server using
 <code class="docutils literal notranslate"><span class="pre">Publisher</span></code>. Here, we show an example to publish our data to
@@ -320,37 +320,37 @@ the beamline devices.</p>
         <span class="n">pub</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="min_versions.html" class="btn btn-neutral float-right" title="Minimum Version of Python and NumPy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="experiment1.html" class="btn btn-neutral float-left" title="Run experiments at NSLS-II" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+        <a href="new_algorithm.html" class="btn btn-neutral float-right" title="Use new algorithm to run the batch processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="experiment.html" class="btn btn-neutral float-left" title="Run experiments at NSLS-II" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2021, Songsheng Tao.
+        &copy; Copyright 2021, Songsheng Tao
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 
@@ -358,6 +358,7 @@ the beamline devices.</p>
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,35 +1,24 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
-  <meta charset="utf-8" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>tomography Documentation &mdash; tomography 0.post1+g0b861ef documentation</title>
-  
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
-  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-
-  
+  <title>tomography Documentation &mdash; tomography 0.0.1 documentation</title>
   
 
   
   
-
+  
   
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -43,6 +32,14 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" /> 
@@ -69,7 +66,7 @@
             
             
               <div class="version">
-                0.post1+g0b861ef
+                0.0.1
               </div>
             
           
@@ -86,7 +83,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -96,15 +92,16 @@
             
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="experiment1.html">Run experiments at NSLS-II</a></li>
-<li class="toctree-l1"><a class="reference internal" href="process_streaming_data.html">Process streaming data using the peak tracking method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment.html">Run experiments at NSLS-II</a></li>
+<li class="toctree-l1"><a class="reference internal" href="old_algorithm.html">Use the old peak tracking algorithm in streaming data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_algorithm.html">Use new algorithm to run the batch processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">API Documents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
 </ul>
 
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -139,20 +136,18 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="#">Docs</a> &raquo;</li>
         
       <li>tomography Documentation</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -166,59 +161,74 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="tomography-documentation">
+  <section id="tomography-documentation">
 <h1>tomography Documentation<a class="headerlink" href="#tomography-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Welcome to the document of the tomography. The package is a toolbox for the data collection, processing, analysis
+and visualization in the crystal mapping. The crystal mapping is a technique to reveal the spatial or oriental
+distribution of single crystals using a series of x-ray diffraction data. There are an old algorithm and a new
+algorithm to do this. The package includes both of them. It is recommended to use the new one.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#instructions-for-developers">Instructions for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installation-from-conda">Installation from conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installation-from-pip">Installation from pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installation-in-development-mode">Installation in development mode</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="experiment1.html">Run experiments at NSLS-II</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="experiment1.html#simulated-motors-and-detectors">Simulated motors and detectors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="experiment1.html#fly-scan">Fly scan</a></li>
-<li class="toctree-l2"><a class="reference internal" href="experiment1.html#grid-scan">Grid scan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="experiment.html">Run experiments at NSLS-II</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment.html#simulated-motors-and-detectors">Simulated motors and detectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment.html#fly-scan">Fly scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment.html#grid-scan">Grid scan</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="process_streaming_data.html">Process streaming data using the peak tracking method</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="process_streaming_data.html#take-a-look-at-the-raw-data">Take a look at the raw data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="process_streaming_data.html#use-callbacks-to-process-the-event-stream">Use callbacks to process the event stream</a></li>
-<li class="toctree-l2"><a class="reference internal" href="process_streaming_data.html#use-servers-to-process-the-real-time-event-stream">Use servers to process the real time event stream</a></li>
-<li class="toctree-l2"><a class="reference internal" href="process_streaming_data.html#pipe-the-data-into-the-database">Pipe the data into the database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="old_algorithm.html">Use the old peak tracking algorithm in streaming data processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="old_algorithm.html#take-a-look-at-the-raw-data">Take a look at the raw data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="old_algorithm.html#use-callbacks-to-process-the-event-stream">Use callbacks to process the event stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="old_algorithm.html#use-servers-to-process-the-real-time-event-stream">Use servers to process the real time event stream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="old_algorithm.html#pipe-the-data-into-the-database">Pipe the data into the database</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="new_algorithm.html">Use new algorithm to run the batch processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#create-the-calculator">Create the calculator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#load-the-experiment-data">Load the experiment Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#process-the-data">Process the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#visualize-the-data">Visualize the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#save-the-data">Save the data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_algorithm.html#load-the-dataset-and-visualize-it">Load the dataset and visualize it</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">API Documents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2021, Songsheng Tao.
+        &copy; Copyright 2021, Songsheng Tao
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 
@@ -226,6 +236,7 @@
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {

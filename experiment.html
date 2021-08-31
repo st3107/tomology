@@ -1,35 +1,24 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
-  <meta charset="utf-8" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Run experiments at NSLS-II &mdash; tomography 0.post1+g0b861ef documentation</title>
-  
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
-  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-
-  
+  <title>Run experiments at NSLS-II &mdash; tomography 0.0.1 documentation</title>
   
 
   
   
-
+  
   
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -43,9 +32,17 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Process streaming data using the peak tracking method" href="process_streaming_data.html" />
+    <link rel="next" title="Use the old peak tracking algorithm in streaming data processing" href="old_algorithm.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -70,7 +67,7 @@
             
             
               <div class="version">
-                0.post1+g0b861ef
+                0.0.1
               </div>
             
           
@@ -87,7 +84,6 @@
           
         </div>
 
-        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -111,14 +107,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="process_streaming_data.html">Process streaming data using the peak tracking method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="old_algorithm.html">Use the old peak tracking algorithm in streaming data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_algorithm.html">Use new algorithm to run the batch processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">API Documents</a></li>
 <li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
 </ul>
 
             
           
         </div>
-        
       </div>
     </nav>
 
@@ -153,21 +150,19 @@
 
 
 
-
-
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
       <li>Run experiments at NSLS-II</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/experiment1.rst.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/experiment.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -180,11 +175,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="run-experiments-at-nsls-ii">
+  <section id="run-experiments-at-nsls-ii">
 <h1>Run experiments at NSLS-II<a class="headerlink" href="#run-experiments-at-nsls-ii" title="Permalink to this headline">¶</a></h1>
 <p>Here, we demonstrate the example code to run the fly scan and grid scan
 experiment at the NSLS-II.</p>
-<div class="section" id="simulated-motors-and-detectors">
+<section id="simulated-motors-and-detectors">
 <h2>Simulated motors and detectors<a class="headerlink" href="#simulated-motors-and-detectors" title="Permalink to this headline">¶</a></h2>
 <p>To demonstrate the example, we set up some simulated motors and
 detectors for better description. During the beamtime, these objects
@@ -203,8 +198,8 @@ will be connected to the real devices.</p>
 <span class="n">shutter</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">SynSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;shutter&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="fly-scan">
+</section>
+<section id="fly-scan">
 <h2>Fly scan<a class="headerlink" href="#fly-scan" title="Permalink to this headline">¶</a></h2>
 <p>A fly scan is to move to a position in the motor positions space, start
 the movement of a fly motor and take light images for specific times
@@ -296,7 +291,7 @@ fly_scan_nd(detectors: list, *args, move_velocity: float, time_per_point: float,
         Wrong motor positions format.
 </pre></div>
 </div>
-<div class="section" id="fly-scan-in-rows">
+<section id="fly-scan-in-rows">
 <h3>Fly scan in rows<a class="headerlink" href="#fly-scan-in-rows" title="Permalink to this headline">¶</a></h3>
 <p>Here is an example of fly scan in rows.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plan</span> <span class="o">=</span> <span class="n">plans</span><span class="o">.</span><span class="n">fly_scan_nd</span><span class="p">(</span>
@@ -405,8 +400,8 @@ beam aiming at a lower part of the sample.</p>
 </pre></div>
 </div>
 <img alt="_images/experiment1_11_0.png" src="_images/experiment1_11_0.png" />
-</div>
-<div class="section" id="fly-scan-in-rocking-curves-on-a-grid">
+</section>
+<section id="fly-scan-in-rocking-curves-on-a-grid">
 <h3>Fly scan in rocking curves on a grid<a class="headerlink" href="#fly-scan-in-rocking-curves-on-a-grid" title="Permalink to this headline">¶</a></h3>
 <p>A more complicated example is to move the sample in a grid and fly in
 the rotation.</p>
@@ -446,9 +441,9 @@ scan in the phi axis.</p>
 </pre></div>
 </div>
 <img alt="_images/experiment1_16_1.png" src="_images/experiment1_16_1.png" />
-</div>
-</div>
-<div class="section" id="grid-scan">
+</section>
+</section>
+<section id="grid-scan">
 <h2>Grid scan<a class="headerlink" href="#grid-scan" title="Permalink to this headline">¶</a></h2>
 <p>A grid scan is to move to a point in the motor positions space, stay
 there, collect one image at that point and then move to the next point
@@ -522,7 +517,7 @@ grid_scan_nd(detectors: list, *args, snake: Union[list, bool] = None, time_per_p
         Wrong motor positions format.
 </pre></div>
 </div>
-<div class="section" id="grid-scan-in-x-y-plane">
+<section id="grid-scan-in-x-y-plane">
 <h3>Grid scan in (x, y) plane<a class="headerlink" href="#grid-scan-in-x-y-plane" title="Permalink to this headline">¶</a></h3>
 <p>Below is an example to do grid scan in rows.</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plan</span> <span class="o">=</span> <span class="n">plans</span><span class="o">.</span><span class="n">grid_scan_nd</span><span class="p">(</span>
@@ -608,8 +603,8 @@ grid_scan_nd(detectors: list, *args, snake: Union[list, bool] = None, time_per_p
 </pre></div>
 </div>
 <img alt="_images/experiment1_25_0.png" src="_images/experiment1_25_0.png" />
-</div>
-<div class="section" id="grid-scan-in-phi-x-y-space">
+</section>
+<section id="grid-scan-in-phi-x-y-space">
 <h3>Grid scan in (phi, x, y) space<a class="headerlink" href="#grid-scan-in-phi-x-y-space" title="Permalink to this headline">¶</a></h3>
 <p>We can use arbitrary number of the motors in a grid scan. Here, we show
 an example to do a scan in a three dimensional space.</p>
@@ -650,38 +645,38 @@ there is a scan at three points along phi axis.</p>
 </pre></div>
 </div>
 <img alt="_images/experiment1_30_0.png" src="_images/experiment1_30_0.png" />
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
            
           </div>
           <footer>
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="process_streaming_data.html" class="btn btn-neutral float-right" title="Process streaming data using the peak tracking method" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      
+        <a href="old_algorithm.html" class="btn btn-neutral float-right" title="Use the old peak tracking algorithm in streaming data processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2021, Songsheng Tao.
+        &copy; Copyright 2021, Songsheng Tao
 
     </p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
+
         </div>
       </div>
 
@@ -689,6 +684,7 @@ there is a scan at three points along phi axis.</p>
 
   </div>
   
+
 
   <script type="text/javascript">
       jQuery(function () {
