@@ -19,3 +19,4 @@ dependencies:
   - numpydoc
   - sphinx-copybutton
   - sphinx_rtd_theme
+  - fire

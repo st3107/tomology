@@ -13,3 +13,4 @@ dependencies:
   - pyfai==0.20.0
   - jupyterlab
   - pip
+  - fire
