@@ -82,18 +82,31 @@ def create_atlas(df: pd.DataFrame, start_frame: int = 1, inverted: bool = True,
     The dataset is like below.
 
         Dimensions:   (dim_0: 2, dim_1: 2, grain: 2)
+
         Coordinates:
+
           * dim_0     (dim_0) float64 6.0 0.0
+
           * dim_1     (dim_1) float64 2.0 0.0
+
           * grain     (grain) int64 0 1
+
         Data variables:
+
             maps      (grain, dim_0, dim_1) float64 1.0 0.0 0.0 0.0 0.0 0.0 0.0 2.0
+
             y         (grain) int64 1 2
+
             x         (grain) int64 1 2
+
             mass      (grain) int64 1 2
+
             size      (grain) int64 1 2
+
             ecc       (grain) int64 1 2
+
             signal    (grain) int64 1 2
+
             raw_mass  (grain) int64 1 2
 
     Parameters
@@ -948,6 +961,8 @@ class Calculator(object):
                      *args, **kwargs) -> None:
         """Automatically process the data in the standard protocol.
 
+        The calculation results are saved in attributes.
+
         Parameters
         ----------
         num_wins : int
@@ -965,7 +980,7 @@ class Calculator(object):
 
         Returns
         -------
-        None. The calculation results are saved in attributes.
+        None.
         """
         if diameter % 2 == 0:
             raise CalculatorError("Diamter must be an odd integer.")

@@ -14,34 +14,12 @@ from ophyd import Signal, Kind
 
 
 class TomoPlanError(Exception):
-    """Error in the plans.
-
-    Parameters
-    ----------
-    Exception : [type]
-        [description]
-    """
+    """Error in the plans."""
     pass
 
 
 def _extarct_motor_pos(mtr):
-    """Extract the motor position.
-
-    Parameters
-    ----------
-    mtr : [type]
-        [description]
-
-    Returns
-    -------
-    [type]
-        [description]
-
-    Yields
-    -------
-    [type]
-        [description]
-    """
+    """Extract the motor position."""
     ret = yield from bps.read(mtr)
     if ret is None:
         return None
@@ -54,32 +32,7 @@ def _extarct_motor_pos(mtr):
 
 
 def configure_area_det(detector, exposure, acq_time):
-    """Configure exposure time of a detector in continuous acquisition mode.
-
-    Parameters
-    ----------
-    detector : [type]
-        [description]
-    exposure : [type]
-        [description]
-    acq_time : [type]
-        [description]
-
-    Returns
-    -------
-    [type]
-        [description]
-
-    Yields
-    -------
-    [type]
-        [description]
-
-    Raises
-    ------
-    TomoPlanError
-        [description]
-    """
+    """Configure exposure time of a detector in continuous acquisition mode."""
     if exposure < acq_time:
         raise TomoPlanError("exposure time < frame acquisition time: {} < {}".format(exposure, acq_time))
     yield from bps.mv(detector.cam.acquire_time, acq_time)
@@ -98,18 +51,7 @@ def configure_area_det(detector, exposure, acq_time):
 
 
 def dark_plan(detector):
-    """Take a dark scan in "dark" stream.
-
-    Parameters
-    ----------
-    detector : [type]
-        [description]
-
-    Yields
-    -------
-    [type]
-        [description]
-    """
+    """Take a dark scan in "dark" stream."""
     # Restage to ensure that dark frames goes into a separate file.
     yield from bps.unstage(detector)
     yield from bps.stage(detector)
@@ -123,20 +65,7 @@ def dark_plan(detector):
 
 def _get_motors_and_coords(starts, ends, nums) -> np.ndarray:
     """Get the motors and coordinates of the motors, like [[motor1_pos1, motor2_pos1, ...],
-    [motor1_pos2, motor2_pos2, ...], ...].
-
-    Returns
-    -------
-    [type]
-        [description]
-
-    Raises
-    ------
-    TomoPlanError
-        [description]
-    TomoPlanError
-        [description]
-    """
+    [motor1_pos2, motor2_pos2, ...], ...]."""
     axes = [np.linspace(start, end, num) for start, end, num in zip(starts, ends, nums)]
     grids = np.meshgrid(*axes, sparse=False, indexing="ij")
     coords = np.column_stack([grid.flatten() for grid in grids])
@@ -158,7 +87,7 @@ def fly_scan_nd(
     md: dict = None,
     backoff: float = 0.,
     snake: bool = False,
-) -> typing.Generic:
+) -> typing.Generator:
     """Move on a grid and do a fly scan at each point in the grid.
 
     For example, `fly_scan_nd([detector], motor_y, 0, 10, 11,
@@ -168,20 +97,19 @@ def fly_scan_nd(
     shutter_wait_open=2, shutter_wait_close=5,
     move_velocity=5, take_dark=True,
     md={"task": "fly scan sample 1", backoff=0.5, snake=False})`
-    means that
-
-    set detector so that it will collect one image for 10 s
+    means that set detector so that it will collect one image for 10 s
     one image contains 10 frames and each frame for 1 s
+
     for y in 0, 1, 2, ..., 10:
-        for x in 0, 1, 2, ..., 20:
-            move to (x, y)
-            wait 5 s
-            collect dark image during the movement
-            open shutter
-            wait 2 s
-            fly scan the motor_fly from -0.5 to 5.5
-            collect 6 images during the fly
-            close shutter
+    for x in 0, 1, 2, ..., 20:
+    move to (x, y)
+    wait 5 s
+    collect dark image during the movement
+    open shutter
+    wait 2 s
+    fly scan the motor_fly from -0.5 to 5.5
+    collect 6 images during the fly
+    close shutter
 
     Parameters
     ----------
@@ -223,11 +151,6 @@ def fly_scan_nd(
         If non-zero, fly scan from start - backoff to end + backoff, by default 0.
     snake : bool, optional
         If true, snake the axis of the fly scan, by default False
-
-    Returns
-    -------
-    typing.Generic
-        The generator of the plan.
 
     Yields
     -------
@@ -386,30 +309,8 @@ def fly_scan_nd_no_shutter(
     md: dict = None,
     backoff: float = 0.,
     snake: bool = False,
-) -> typing.Generic:
+) -> typing.Generator:
     """Move on a grid and do a fly scan at each point in the grid.
-
-    For example, `fly_scan_nd([detector], motor_y, 0, 10, 11,
-    motor_x, 0, 20, 21, motor_fly, 0, 5, 6,
-    time_per_point=10, time_per_frame=1, shutter=shutter,
-    shutter_open=1, shutter_close=0,
-    shutter_wait_open=2, shutter_wait_close=5,
-    move_velocity=5, take_dark=True,
-    md={"task": "fly scan sample 1", backoff=0.5, snake=False})`
-    means that
-
-    set detector so that it will collect one image for 10 s
-    one image contains 10 frames and each frame for 1 s
-    for y in 0, 1, 2, ..., 10:
-        for x in 0, 1, 2, ..., 20:
-            move to (x, y)
-            wait 5 s
-            collect dark image during the movement
-            open shutter
-            wait 2 s
-            fly scan the motor_fly from -0.5 to 5.5
-            collect 6 images during the fly
-            close shutter
 
     Parameters
     ----------
@@ -451,11 +352,6 @@ def fly_scan_nd_no_shutter(
         If non-zero, fly scan from start - backoff to end + backoff, by default 0.
     snake : bool, optional
         If true, snake the axis of the fly scan, by default False
-
-    Returns
-    -------
-    typing.Generic
-        The generator of the plan.
 
     Yields
     -------
@@ -614,7 +510,7 @@ def grid_scan_nd(
     shutter_wait_close: float = 0.,
     take_dark: bool = True,
     md=None
-) -> typing.Generic:
+) -> typing.Generator:
     """Scan over a mesh; each motor is on an independent trajectory.
 
     Parameters
@@ -656,11 +552,6 @@ def grid_scan_nd(
         If true, take a dark image at the end of the fly scan, by default True
     md : [type], optional
         The dictionary of the metadata to added into the plan, by default None, by default None
-
-    Returns
-    -------
-    typing.Generic
-        The generator of the plan.
 
     Yields
     -------
@@ -737,9 +628,8 @@ def grid_scan_no_dark(
     shutter_open: typing.Any,
     shutter_close: typing.Any,
     shutter_wait_open: float = 0.,
-    shutter_wait_close: float = 0.,
     md=None
-) -> typing.Generic:
+) -> typing.Generator:
     """Scan over a mesh; each motor is on an independent trajectory.
 
     Parameters
@@ -775,17 +665,8 @@ def grid_scan_no_dark(
         The value of the shutter in close state.
     shutter_wait_open : float, optional
         The time between the shutter open and the start of the light image collection, by default 0.
-    shutter_wait_close : float, optional
-        The time between the shutter close and the start of the dark image collection, by default 0.
-    take_dark : bool, optional
-        If true, take a dark image at the end of the fly scan, by default True
     md : [type], optional
         The dictionary of the metadata to added into the plan, by default None, by default None
-
-    Returns
-    -------
-    typing.Generic
-        The generator of the plan.
 
     Yields
     -------
