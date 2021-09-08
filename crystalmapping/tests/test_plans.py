@@ -1,3 +1,4 @@
+import pytest
 from bluesky import RunEngine
 from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.simulators import summarize_plan
@@ -14,6 +15,7 @@ if _run_RE:
     RE.subscribe(bec, "all")
 
 
+@pytest.mark.skip
 def test_fly_scan_2d():
     shutter = sim.SynSignal(name="shutter")
     area_det = sim.FakeAreaDetector(name="dexela")
@@ -35,6 +37,7 @@ def test_fly_scan_2d():
         summarize_plan(plan)
 
 
+@pytest.mark.skip
 def test_fly_scan_3d():
     shutter = sim.SynSignal(name="shutter")
     area_det = sim.FakeAreaDetector(name="dexela")
@@ -57,6 +60,7 @@ def test_fly_scan_3d():
         summarize_plan(plan)
 
 
+@pytest.mark.skip
 def test_grid_scan_2d():
     shutter = sim.SynSignal(name="shutter")
     area_det = sim.FakeAreaDetector(name="dexela")
