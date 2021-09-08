@@ -1,4 +1,4 @@
-{% set name = 'tomography' %}
+{% set name = 'crystalmapping' %}
 {% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') %}
 {% set build_number = environ.get('GIT_DESCRIBE_NUMBER', '0') %}
 
@@ -38,8 +38,8 @@ build:
     # Some packages might need a `test/commands` key to check CLI.
     # List all the packages/modules that `run_test.py` imports.
     imports:
-      - tomography
-      - tomography.utils
+      - crystalmapping
+      - crystalmapping.utils
     # Run your test commands here
   # Uncomment and fill in crystalmapping metadata
   #about:

@@ -8,7 +8,7 @@ from bluesky.callbacks.stream import LiveDispatcher
 from databroker import Broker, Header
 from trackpy import link, locate
 
-from tomography._vend import gen_stream
+from crystalmapping._vend import gen_stream
 
 
 def gen_processed_images(images: typing.Iterable[typing.Union[list, np.ndarray]],

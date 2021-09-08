@@ -4,8 +4,8 @@ import numpy as np
 import xarray as xr
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import tomography.callbacks as cbs
-import tomography.utils as utils
+import crystalmapping.callbacks as cbs
+import crystalmapping.utils as utils
 from databroker import Broker
 import pymongo
 from csvdb.client import Client

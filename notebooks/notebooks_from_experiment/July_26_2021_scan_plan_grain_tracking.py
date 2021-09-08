@@ -7,7 +7,7 @@
 6. motor name need to be changed and match the real device name at the beamline
 """
 
-import tomography.plans as plans
+import crystalmapping.plans as plans
 
 # set motor names and shutter
 motor_x, motor_y, motor_phi = "TBD", "TBD", "TBD"

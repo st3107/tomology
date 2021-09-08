@@ -1,7 +1,7 @@
 import numpy as np
 from databroker import Broker
 from bluesky.callbacks.best_effort import BestEffortCallback
-from tomography.callbacks import ImageProcessor, PeakTrackor, TrackLinker
+from crystalmapping.callbacks import ImageProcessor, PeakTrackor, TrackLinker
 from bluesky.callbacks.zmq import RemoteDispatcher
 
 # load the image to use

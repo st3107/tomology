@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from pdfstream.callbacks.composer import gen_stream
 
-import tomography.servers as servers
+import crystalmapping.servers as servers
 
 
 def test_Extremum(tmpdir):

@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 min_version = (3, 6)
 if sys.version_info < min_version:
     error = """
-tomography does not support Python {0}.{1}.
+crystalmapping does not support Python {0}.{1}.
 Python {2}.{3} and above is required. Check your Python version like so:
 
 python3 --version
@@ -35,7 +35,7 @@ with open(path.join(here, 'requirements.txt')) as requirements_file:
 setup(
     name='crystalmapping',
     version='0.0.1',
-    description="A crystal tomography of a multi-domain crystal rod",
+    description="A crystal crystalmapping of a multi-domain crystal rod",
     long_description=readme,
     author="Songsheng Tao",
     author_email='st3107@columbia.edu',
@@ -49,7 +49,7 @@ setup(
     },
     include_package_data=True,
     package_data={
-        'tomography': [
+        'crystalmapping': [
             "data/*"
             # When adding files here, remember to update MANIFEST.in as well,
             # or else they will not be included in the distribution on PyPI!

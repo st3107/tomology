@@ -2,8 +2,8 @@ from bluesky import RunEngine
 from bluesky.callbacks.best_effort import BestEffortCallback
 from bluesky.simulators import summarize_plan
 
-import tomography.plans as plans
-import tomography.sim as sim
+import crystalmapping.plans as plans
+import crystalmapping.sim as sim
 
 _run_RE = False
 if _run_RE:

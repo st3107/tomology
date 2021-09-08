@@ -8,7 +8,7 @@ import trackpy as tp
 from pdfstream.callbacks.composer import gen_stream
 from pkg_resources import resource_filename
 
-import tomography.callbacks as cbs
+import crystalmapping.callbacks as cbs
 
 
 def print_doc(name, doc):
@@ -48,7 +48,7 @@ def test_PeakTracker(tmpdir):
     """Check that PeakTrack and TrackLinker works without errors."""
     tp.quiet()
     # make images
-    image_file = resource_filename("tomography", "data/image.png")
+    image_file = resource_filename("crystalmapping", "data/image.png")
     image = plt.imread(image_file)
     images = [image] * 3
     # check if db friendly
