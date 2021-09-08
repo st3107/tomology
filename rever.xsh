@@ -9,7 +9,7 @@ $ACTIVITIES = [
                ]
 $VERSION_BUMP_PATTERNS = [  # These note where/how to find the version numbers
                          ('crystalmapping/__init__.py', r'__version__*=.*', "__version__ = '$VERSION'"),
-                         ('setup.py', r'version\s*=.*,', "version='$VERSION',")
+                         ('setup.py', r'version*=.*,', "version='$VERSION',")
                          ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'  # Filename for the changelog
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'  # Filename for the news template
