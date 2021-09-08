@@ -2,9 +2,6 @@
 tomography
 ==========
 
-.. image:: https://github.com/st3107/tomology/actions/workflows/test.yml/badge.svg
-        :target: https://github.com/st3107/tomology/actions/workflows/test.yml
-
 .. image:: https://codecov.io/gh/st3107/tomology/branch/main/graph/badge.svg?token=GLRRK9K9BM
       :target: https://codecov.io/gh/st3107/tomology
 
